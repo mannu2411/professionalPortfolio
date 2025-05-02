@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building a Real-Time Chat Application with WebSockets, Kafka and Redis | Manubhav Jain</title>
+    <title>Real time Dashboard using websockets | Manubhav Jain</title>
     <script>
         function toggleNav() {
             document.querySelector('.nav-links').classList.toggle('active');
@@ -560,14 +560,14 @@
     </header>
 
     <section class="blog-header">
-        <img src="chatting servers.png" alt="Chat Application Servers" class="blog-image">
+        <img src="dynamic-dashboard.svg" alt="Dashboard" class="blog-image" style="width: 90%; max-width: 50rem;">
         <div class="blog-header-content">
             <p class="blog-category">Distributed Systems</p>
-            <h1 class="blog-title">Building a Real-Time Chat Application with WebSockets, Kafka and Redis</h1>
+            <h1 class="blog-title">Real time Dashboard using websockets</h1>
             <div class="blog-meta">
                 <span><i class="far fa-calendar-alt"></i> April 24, 2025</span>
                 <span><i class="far fa-clock"></i> 10 min read</span>
-                <span><i class="fas fa-tag"></i> WebSockets, Kafka, Redis</span>
+                <span><i class="fas fa-tag"></i> WebSockets, Goroutines, Channels</span>
             </div>
         </div>
     </section>
@@ -575,339 +575,213 @@
     <div class="blog-content">
         <h2>Introduction</h2>
         <p>
-            Real-time chat is virtually any online communication that provides a real-time or live transmission of text messages from sender to receiver. A variety of software programs are available to enable real-time chat between individuals using Internet services. Chat messages are often brief so as to let other participants respond swiftly, thereby creating a feeling much like a spoken conversation. This mode of communication differentiates real-time chats from other forms of text-based online communications, including emails and Internet forums. Real-time chat uses Web-based apps, which permit communication that is usually addressed directly but is anonymous among users in a multi-user environment.
+            A dashboard is a data visualization and management tool that visually tracks and analyzes the Key Performance Indicators (KPIs), business analytics metrics, infrastructure health and status, and data points for an organization, team, or process. It can be used to present operational and analytical business data with interactive data visualizations to your team.
         </p>
         <p>
-            WebSockets are a great fit for applications like chats or simple games. Chat sessions are usually long-lived, with the client receiving messages from other participants over a long period of time. Chat sessions are also bidirectional – clients want to send chat messages, and see chat messages from others.
-            Unlike regular HTTP requests, WebSocket connections can be kept open for a long time and have an easy interface for exchanging data between the client and server in the form of frames. WebSockets are also a widely supported technology. All modern browsers can work with WebSockets out of the box, and frameworks to work with WebSockets exist in many programming languages and on many platforms.
+            A real-time dashboard is a dashboard that contains charts that are automatically updated with the most current data available. The typical use case is to load a chart with some historical data first and then live update it as new data comes in.
         </p>
 
-        <h2>Prerequisite</h2>
         <p>
-            Before we move on to implementation there are basic terms and technologies we need to be familiar with.
+            WebSocket has become the de facto standard of building real-time dashboards and data visualizations. Unlike traditional dashboards based on periodic polling of databases, WebSockets allows its client to listen to the data coming from servers. That enables the backends to send new data to dashboards at the same time when something happens. 
         </p>
         
-        <h3>Kafka:</h3>
+        <h2>Building Websocket Server for Dashboard</h2>
         <p>
-            In order to handle large number of connections, we will be needing multiple instances of a server, thus there will be a need for a medium for server to server communication. In a very fast, reliable, persisted, fault-tolerance and zero downtime manner, Kafka offers a Pub-sub and queue-based messaging system. The producers send the message to a topic and the consumer can select any one of the message systems according to their wish.
-        </p>
-        
-        <h3>Redis:</h3>
+            To get the proper understanding of the working of real-time dashboard lets create a simple websocket based server which keeps track of some elements and updates all active websocket connection about the changes on tracked data. For sake of simplicity we will only keep track of three variables <code>products</code>, <code>orders</code> and <code>customers</code>.
+            For this we will be using <code>golang</code> library <code>github.com/gorilla/websocket</code> for websocket connection and <code>github.com/go-chi/chi</code> for our server.</p>
+              
         <p>
-            For keeping account of online users and managing messages between multiple servers we would be needing a fast and reliable database system. Redis delivers sub-millisecond response times, enabling millions of requests per second for real-time applications in industries like gaming, ad-tech, financial services, healthcare, and IoT. Today, Redis is one of the most popular open source engines today, named the "Most Loved" database by Stack Overflow for five consecutive years. Because of its fast performance, Redis is a popular choice for caching, session management, gaming, leaderboards, real-time analytics, geospatial, ride-hailing, chat/messaging, media streaming, and pub/sub apps.
+            First, we create a <code>DashboardData</code> structure to store the tracked data.
         </p>
-
-        <h2>Building a Chatting Application</h2>
-        <p>
-            Now, Since we have gotten familiar with the technologies we will be using, below is the design diagram for our application:
-        </p>
-        
-        <img src="ChattingDesign.png" alt="Chat Application Architecture Diagram" class="diagram-image">
-        
-        <p>
-            For our application, we will build a messaging server in <code>Golang</code>
-        </p>
-
-        <h3>Docker-compose setup</h3>
-        <p>
-            Below is the docker-compose file we will be using to set up our services:
-        </p>
-        
-        <div class="code-block">version: '2'
-services:
-    zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-    environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
-    ports:
-        - 22181:2181
-
-    kafka:
-        image: confluentinc/cp-kafka:latest
-        depends_on:
-            - zookeeper
-        ports:
-            - 9093:9093
-        environment:
-              KAFKA_BROKER_ID: 1
-              KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-              KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
-              KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-              KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-              KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-              KAFKA_CREATE_TOPICS: my-kafka-topic
-    redis:
-        image: 'bitnami/redis:latest'
-        ports:
-            - "6379:6379"
-        environment:
-            - ALLOW_EMPTY_PASSWORD=yes</div>
-
-        <p>
-            In the above <code>docker-compose.yml</code> file images used:
-        </p>
-        <ul>
-            <li>For Redis: <code>bitnami/redis:latest</code></li>
-            <li>For Kafka: <code>confluentinc/cp-kafka:latest</code></li>
-        </ul>
-        
-        <p>
-            Now that we have set up out docker-compose file we need to establish our services with our server using golang.
-        </p>
-        
-        <p>
-            For this we would be using golang library:
-        </p>
-        <ul>
-            <li>For Redis: <code>github.com/gomodule/redigo/redis</code></li>
-            <li>For Kafka: <code>github.com/segmentio/kafka-go</code></li>
-            <li>For Websockets: <code>github.com/gorilla/websocket</code></li>
-        </ul>
-
-        <p>
-            To create a server lets create a server object to access the services:
-        </p>
-
-        <div class="code-block">type Server struct {
-    userCons    map[string]*websocket.Conn
-    ctx         context.Context
-    reader      *kafka.Reader
-    writer      *kafka.Writer
-    mut         sync.Mutex
-    RedisClient *redis.Client
-}</div>
-
-        <p>
-            To initialize these services below is the <code>InitService()</code> function:
-        </p>
-
-        <div class="code-block">func InitService() *Server {
-    return &Server{
-        userCons: make(map[string]*websocket.Conn),
-        ctx:      context.Background(),
-        reader: kafka.NewReader(kafka.ReaderConfig{
-            Brokers: []string{"localhost:9093"},
-            Topic:   "my-kafka-topic",
-            GroupID: "group1",
-        }),
-        writer: &kafka.Writer{
-            Addr:     kafka.TCP("localhost:9093"),
-            Topic:    "my-kafka-topic",
-            Balancer: &kafka.Murmur2Balancer{},
-        },
-        mut: sync.Mutex{},
-        RedisClient: redis.NewClient(&redis.Options{
-            Addr:     "localhost:6379",
-            Password: "",
-            DB:       0,
-        }),
-    }
-}</div>
-
-        <p>
-            Now that we have initialized our services, we need to create a structure to encode-decode messages.
-            Below is the structure we will be using:
-        </p>
-
-        <div class="code-block">type UserMessage struct {
-    User    string `json:"user"`
-    Message string `json:"msg"`
-}</div>
-
-        <p>
-            The user in the structure will have recipient user ID and Message we need to send.
-        </p>
-
-        <h3>Creating WebSocket Handler</h3>
-        <p>
-            Now, we can start creating our handler to receive and send messages.
-            Let's start with initialing a handshake using <code>Upgrade()</code> method:
-        </p>
-
-        <div class="code-block">// Upgrade your connection to websocket connection
-conn, err := upgrades.Upgrade(w, r, nil)
-if err != nil {
-    w.WriteHeader(http.StatusInternalServerError)
-    return
-}</div>
-
-        <p>
-            Once handshake is done we need to check for sender user ID from parameters and mark him online. To do that we will be using Redis and userCons map to store connection object and tag user online:
-        </p>
-
-        <div class="code-block">// Get Sender user ID from parameter
-inID := r.URL.Query().Get("user")
-
-// Writing connection in user connection map and into the redis to keep account if user is online into which server
-srv.mut.Lock()
-srv.userCons[inID] = conn
-srv.RedisClient.Set(inID, "true", 0)
-srv.mut.Unlock()</div>
-
-        <p>
-            Once we mark user online we will be sending user un-recieved messages which he may got when he was offline. We are storing un-recieved messages into our Redis Database:
-        </p>
-
-        <div class="code-block">// Sending un-recieved messages which was sent when user was offline
-
-// Retrieving messages from Redis server
-val, err := srv.RedisClient.Get(inID + "msg").Result()
-if err == nil && val != "" {
-    // Function to send old messaged to the user
-    go srv.SendOldMsg(inID, val)
-}</div>
-
-        <div class="code-block">func (srv *Server) SendOldMsg(key string, uMsgs string) {
-    fmt.Println("Sending old messages")
-    // splitting old messages
-    messages := strings.Split(uMsgs, "|")
-    srv.mut.Lock()
-    for _, msg := range messages {
-        // sending un-received message to the user via websocket
-        if err := srv.userCons[key].WriteMessage(1, []byte(msg)); err != nil {
-            return
-        }
-    }
-    srv.RedisClient.Set(key, "", 0)
-    srv.mut.Unlock()
-}</div>
-
-        <p>
-            Now once user received his messages we can start with chatting session we will be using 2 <code>go func()</code> for that one will receive messages from websocket and broadcast it into <code>kafka</code> and the other will receive messages from Kafka and send it to recipient via websocket. In case the recipient is offline, the messages send by the user will be stored into redis.
-        </p>
-
-        <div class="code-block">// Receiver Server
-go func() {
-    for {
-        // Get messages from kafka which was broadcast by the server to which sender was connected to
-        msg, err := srv.reader.ReadMessage(srv.ctx)
-        if err != nil {
-            break
-        }
-        fmt.Println("Kafka Message received: ", string(msg.Value))
-        
-        var usrMsg UserMessage
-        
-        err = json.Unmarshal(msg.Value, &usrMsg)
-        if err != nil {
-            break
-        }
-        fmt.Println("Received:", usrMsg)
-        
-        // Retrieve connection object from map and send received messages to user via websocket
-        srv.mut.Lock()
-        // Checking if recipient is connected to the server
-        if conn, ok := srv.userCons[usrMsg.User]; ok {
-            // if recipient is connected sending messages via websocket
-            if err := conn.WriteMessage(1, []byte(usrMsg.Message)); err != nil {
-                break
+        <div class="code-block">
+            type DashboardData struct {
+                Orders    int `json:"orders"`
+                Customers int `json:"customers"`
+                Products  int `json:"products"`
             }
-        }
-        srv.mut.Unlock()
-    }
-}()</div>
-
-        <p>
-            Above code receives message from <code>kafka</code> and checks if recipient is connected to the server. If there exist a connection, server sends the message to recipient via websocket.
+        </div>        
+          <p>
+            For fetching Dashboard data we can use <code> FetchDashboardHelper</code> for fetch complete dashboard data:
         </p>
-    
-        <div class="code-block">// Sender Server
-for {
-    // Getting messages from websoket
-    _, body, err := conn.ReadMessage()
-    if err != nil {
-        break
-    }
-    // structure containing recipient user ID and messages
-    var usrMsg UserMessage
-    err = json.Unmarshal(body, &usrMsg)
-    if err != nil {
-        break
-    }
-    // checking if recipient is connected to any of the server instances via Redis
-    val, err = srv.RedisClient.Get(usrMsg.User).Result()
-    if err != nil || val == "false" {
-        // if recipient is not connected, saving messages to redis, so that recipient can receive them when he comes online
-        val, err := srv.RedisClient.Get(usrMsg.User + "msg").Result()
-        if err != nil {
-            val = usrMsg.Message
-        } else {
-            // if there are already old messages, appending new messages to them
-            val = val + "|" + usrMsg.Message
-        }
-        // writing un-recieved messages to redis for recipient to read when he comes online
-        srv.mut.Lock()
-        srv.RedisClient.Set(usrMsg.User+"msg", val, 0)
-        srv.mut.Unlock()
         
-        log.Printf("Succes: Msg written in redis for user: %v and msg: %v", usrMsg.User, usrMsg.Message)
-    } else {
-        // In case recipient is online broadcasting message via kafka so that receiver server can get the message
-        tmp := string(body)
-        msg := kafka.Message{
-            Key:   []byte(usrMsg.User),
-            Value: []byte(tmp),
-        }
-        // writing message to kafka
-        err = srv.writer.WriteMessages(srv.ctx, msg)
-        if err != nil {
-            log.Printf("Error: %v", err)
-        }
-        log.Printf("Succes: Msg written in kafka for user: %v and msg: %v", usrMsg.User, string(msg.Value))
+        <div class="code-block">
+            func (Dashboard *DashboardData) FetchDashboardHelper() []byte {
+                data, err := json.Marshal(Dashboard)
+                if err != nil {
+                    log.Printf("Error: %v", err)
+                }
+                return data
+            }
+        </div>
+
+        <p>
+            We can add and remove dashboard data, we will be using <code>AddDashboardData(s string)</code>  and <code>RemoveDashboardData(s string) error</code> functions:
+        </p>
+        <div class="code-block">
+            func (Dashboard *DashboardData) FetchDashboardHelper() []byte {
+                data, err := json.Marshal(Dashboard)
+                if err != nil {
+                    log.Printf("Error: %v", err)
+                }
+                return data
+            }
+        
+            func (Dashboard *DashboardData) AddDashboardData(s string) {
+                switch s {
+                case ORDERS:
+                    Dashboard.Orders++
+                case CUSTOMERS:
+                    Dashboard.Customers++
+                case PRODUCTS:
+                    Dashboard.Products++
+                }
+        
+                // update presently connected websocket connections about the dashboard changes
+                go func() {
+                    update <- 1 
+                }()
+            }
+            
+            func (Dashboard *DashboardData) RemoveDashboardData(s string) error {
+                switch s {
+                case ORDERS:
+                    if Dashboard.Orders == 0 {
+                        return fmt.Errorf("no order remains to remove")
+                    }
+                    Dashboard.Orders--
+                case CUSTOMERS:
+                    if Dashboard.Customers == 0 {
+                        return fmt.Errorf("no customer remains to remove")
+                    }
+                    Dashboard.Customers--
+                case PRODUCTS:
+                    if Dashboard.Products == 0 {
+                        return fmt.Errorf("no product remains to remove")
+                    }
+                    Dashboard.Products--
+                }
+        
+                // update presently connected websocket connections about the dashboard changes
+                go func() {
+                    update <- 1
+                }()
+                return nil
+            }
+        </div>
+
+        <p>
+            As you can see in from above code apart from updating dashboard data we are also sending a data on channel, it is so that we can change the updated channel to all the websocket connection currently connected to the server.
+            Below are the add and delete API handlers we are using to update dashboard:             
+        </p>
+
+        <div class="code-block">
+            func AddOrder(w http.ResponseWriter, r *http.Request) {
+                dashboard.AddDashboardData(ORDERS)
+                _, err := w.Write([]byte("Order Added"))
+                if err != nil {
+                    return
+                }
+                return
+            }
+        
+            func AddCustomer(w http.ResponseWriter, r *http.Request) {
+                dashboard.AddDashboardData(CUSTOMERS)
+                _, err := w.Write([]byte("Order Added"))
+                if err != nil {
+                    return
+                }
+                return
+            }
+        
+            func AddProducts(w http.ResponseWriter, r *http.Request) {
+                dashboard.AddDashboardData(PRODUCTS)
+                _, err := w.Write([]byte("Order Added"))
+                if err != nil {
+                    return
+                }
+                return
+            }
+            
+            func RemoveOrder(w http.ResponseWriter, r *http.Request) {
+                err := dashboard.RemoveDashboardData(ORDERS)
+                if err != nil {
+                    w.WriteHeader(http.StatusBadRequest)
+                    return
+                }
+                _, err = w.Write([]byte("Order Added"))
+                if err != nil {
+                    return
+                }
+                return
+            }
+            
+            func RemoveCustomer(w http.ResponseWriter, r *http.Request) {
+                err := dashboard.RemoveDashboardData(CUSTOMERS)
+                if err != nil {
+                    w.WriteHeader(http.StatusBadRequest)
+                    return
+                }
+                _, err = w.Write([]byte("Order Added"))
+                if err != nil {
+                    return
+                }
+                return
+            }
+        
+            func RemoveProducts(w http.ResponseWriter, r *http.Request) {
+                err := dashboard.RemoveDashboardData(PRODUCTS)
+                if err != nil {
+                    w.WriteHeader(http.StatusBadRequest)
+                    return
+                }
+                _, err = w.Write([]byte("Order Added"))
+                if err != nil {
+                    return
+                }
+                return
+            }        
+        </div>
+
+        <p>
+            Now, we have all the required handlers we will be needing for our Websocket server. Below is the <code>main()</code> function we used:
+        </p>
+
+        <div class="code-block">
+    var update chan int // channel to keep track when dashboard is updated
+    var dashboard DashboardData // structure to store dashboard data
+    
+    func main() {
+        fmt.Println("Starting Server...")
+        update = make(chan int)
+        router := chi.NewRouter()
+        router.Route("/", func(ws chi.Router) {
+            ws.Get("/dashboard", DashboardHandler)
+            ws.Post("/sign-up", AddCustomer)
+            ws.Post("/order", AddOrder)
+            ws.Post("/product", AddProducts)
+            ws.Delete("/order", RemoveOrder)
+            ws.Delete("/product", RemoveProducts)
+            ws.Delete("/sign-off", RemoveCustomer)
+        })
+        log.Fatal(http.ListenAndServe(":8082", router))
     }
-}</div>
+        </div>
 
         <p>
-            Above code receives <code>json encoded</code> messages from websocket and decode it into the structure. If the recipient is online, the server will broadcast the message into kafka so that the server instance to which recipient is connected will receive the message. In case recipient is offline, the messages will be stores in redis.    
+            As we run the above code out server will be hosted on <code>localhost:8082</code>. 
+Below is the Postman snippet of Dashboard API:
         </p>
- 
-        <div class="code-block">// return to handler in case user disconnect from server
-// setting map and redis, so that user appears offline
-srv.mut.Lock()
-delete(srv.userCons, inID)
-srv.RedisClient.Set(inID, "false", 0)
-srv.mut.Unlock()
-fmt.Println("User Deleted Redis")</div>
-
+        <video controls class="diagram-image">
+            <source src="dashboard.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <img src="output.png" alt="Postman Output" class="diagram-image">
         <p>
-            Once the connection is disconnected, we will remove the connection object from the map and mark user as offline in redis.
+            As we can see from above snippet user connected to server via websocket will get updated dashboard data with every change it will receive. Hence, user is get updated in real-time.
         </p>
-
-        <p>
-            It is worth to note that in the above code there are 2 channels for redis one store the user un-recieved messages and other to store user online status.
-        </p>
-
-        <p>
-            The code demonstrates how a multi-instance server chatting service will work and how messages will manage such a complex system.
-        </p>
-
-        <p>
-            Below is the <code>main()</code> func we used for the server:
-        </p>
-
-        <div class="code-block">func main() {
-    srv := InitService()
-    fmt.Println("Starting Server...")
-    router := chi.NewRouter()
-    router.Route("/", func(ws chi.Router) {
-        ws.Get("/", srv.Alive)
-        ws.Get("/read", srv.ReadMsg)
-    })
-    log.Fatal(http.ListenAndServe(":8081", router))
-}</div>
-
-<p>
-    We can test this server by sending websocket request via postman. 
-    Below is the output snippets of postman:
-</p>
-
-<img src="user1.png" alt="User 1 Chat Interface" class="diagram-image">
-<img src="user2.png" alt="User 2 Chat Interface" class="diagram-image">
-
 <h2>Conclusion</h2>
 <p>
-    In this blog, we explored real-time chatting service, their system-design and how the messages are handled. Also we have implemented a multi-server instance chatting service which is managed by services like Redis and Kafka, due to which we are able to transmit messages reliably between users with very low latency.
+    WebSockets are one of the most interesting and convenient ways to achieve real-time capabilities in an application. It gives us a lot of flexibility to leverage full-duplex communications. In this blog, we have explored the applications of websockets and also created a real-time dashboard service using it which shows how data is handled in real-time.   
 </p>
 
 <div class="blog-tags">

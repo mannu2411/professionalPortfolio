@@ -723,7 +723,63 @@
         color: #ff4c4c;
         border: 1px solid #ff4c4c;
     }
-    </style>
+    
+.hamburger {
+    display: none;
+    font-size: 28px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        background-color: var(--bg-color);
+        position: absolute;
+        top: 70px;
+        right: 0;
+        width: 100%;
+        padding: 20px;
+        z-index: 999;
+    }
+
+    #nav-links.active {
+        display: flex;
+    }
+
+    .hamburger {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 32px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .hero-description {
+        font-size: 16px;
+    }
+
+    .featured-blog {
+        grid-template-columns: 1fr;
+    }
+
+    .blog-image img {
+        object-fit: contain;
+    }
+}
+</style>
+<script>
+    function toggleNav() {
+        document.querySelector('.nav-links').classList.toggle('active');
+    }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -731,22 +787,23 @@
     
     <header>
         <nav>
-            <div class="logo">MJ</div>
-            <div class="nav-links">
-                <a href="#about">About</a>
-                <a href="#experience">Experience</a>
-                <a href="#skills">Skills</a>
-                <a href="#projects">Projects</a>
-                <a href="#blog">Blog</a>
-                <a href="#contact">Contact</a>
-            </div>
-        </nav>
+    <div class="logo">MJ</div>
+    <div class="hamburger" onclick="toggleNav()">&#9776;</div>
+    <div class="nav-links" id="nav-links">
+        <a href="#about">About</a>
+        <a href="#experience">Experience</a>
+        <a href="#skills">Skills</a>
+        <a href="#projects">Projects</a>
+        <a href="#blog">Blog</a>
+        <a href="#contact">Contact</a>
+    </div>
+</nav>
     </header>
     
     <section id="hero">
         <div class="hero-content">
             <p class="sub-heading">Hi, my name is</p>
-            <h1>Manubhav Jain.</h1>
+            <h1>Manubhav Jain</h1>
             <h2>I build robust backend systems.</h2>
             <p class="hero-description">
                 I'm a backend software developer specializing in building exceptional, high-performing, and scalable digital experiences. Currently focused on creating robust backend services with Golang.
@@ -939,20 +996,20 @@
                     
                     <div class="blog-card">
                         <div class="blog-image">
-                            <img src="/api/placeholder/400/240" alt="Golang code showing concurrent patterns">
+                            <img src="Dashboard/dynamic-dashboard.svg" alt="Dynamic dashboard architecture diagram">
                         </div>
                         <div class="blog-content">
                             <p class="blog-date">March 15, 2025</p>
-                            <h3 class="blog-title">Mastering Concurrency in Go: Patterns and Best Practices</h3>
+                            <h3 class="blog-title">Real time Dashboard using websockets</h3>
                             <p class="blog-excerpt">
-                                Golang's concurrency model, built around goroutines and channels, offers elegant solutions to complex problems. In this post, I explore advanced patterns that have helped me build high-performance systems.
+                                A dashboard is a data visualization and management tool that visually tracks and analyzes the Key Performance Indicators (KPIs), business analytics metrics, infrastructure health and status, and data points for an organization, team, or process. It can be used to present operational and analytical business data with interactive data visualizations to your team.    
                             </p>
                             <div class="blog-tags">
-                                <span class="blog-tag">Golang</span>
-                                <span class="blog-tag">Concurrency</span>
-                                <span class="blog-tag">Performance</span>
+                                <span class="blog-tag">WebSockets</span>
+                                <span class="blog-tag">Goroutines</span>
+                                <span class="blog-tag">Channels</span>
                             </div>
-                            <a href="#" class="read-more" onclick="openBlogPost(2); return false;">
+                            <a href="Dashboard/dashboard.html" class="read-more" >
                                 Read More <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
