@@ -461,14 +461,14 @@
 <body>
     <header>
         <nav>
-            <a href="portfolio-webpage-with-blog.html" class="logo">MJ</a>
+            <a href="../index.html" class="logo">MJ</a>
             <div class="nav-links">
-                <a href="portfolio-webpage-with-blog.html#about">About</a>
-                <a href="portfolio-webpage-with-blog.html#experience">Experience</a>
-                <a href="portfolio-webpage-with-blog.html#skills">Skills</a>
-                <a href="portfolio-webpage-with-blog.html#projects">Projects</a>
-                <a href="portfolio-webpage-with-blog.html#blog">Blog</a>
-                <a href="portfolio-webpage-with-blog.html#contact">Contact</a>
+                <a href="../index.html#about">About</a>
+                <a href="../index.html#experience">Experience</a>
+                <a href="../index.html#skills">Skills</a>
+                <a href="../index.html#projects">Projects</a>
+                <a href="../index.html#blog">Blog</a>
+                <a href="../index.html#contact">Contact</a>
             </div>
         </nav>
     </header>
@@ -515,7 +515,7 @@
             Now, Since we have gotten familiar with the technologies we will be using, below is the design diagram for our application:
         </p>
         
-        <img src="/api/placeholder/800/500" alt="Chat Application Architecture Diagram" class="diagram-image">
+        <img src="ChattingDesign.png" alt="Chat Application Architecture Diagram" class="diagram-image">
         
         <p>
             For our application, we will build a messaging server in <code>Golang</code>
@@ -688,4 +688,259 @@
         <div class="code-block">
             <span class="line"><span class="code-keyword">func</span> (srv *Server) <span class="code-function">SendOldMsg</span>(key <span class="code-keyword">string</span>, uMsgs <span class="code-keyword">string</span>) {</span>
             <span class="line">    fmt.<span class="code-function">Println</span>(<span class="code-string">"Sending old messages"</span>)</span>
-            <span class="line">    <span class="code-comment">// splitting ol
+            <span class="line">    <span class="code-comment">// splitting old messages</span></span>
+            <span class="line">    messages := strings.<span class="code-function">Split</span>(uMsgs, <span class="code-string">"|"</span>)</span>
+            <span class="line">    srv.mut.<span class="code-function">Lock</span>()</span>
+            <span class="line">    <span class="code-keyword">for</span> _, msg := <span class="code-keyword">range</span> messages {</span>
+            <span class="line">        <span class="code-comment">// sending un-received message to the user via websocket</span></span>
+            <span class="line">        <span class="code-keyword">if</span> err := srv.userCons[key].<span class="code-function">WriteMessage</span>(1, []<span class="code-keyword">byte</span>(msg)); err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">            <span class="code-keyword">return</span></span>
+            <span class="line">        }</span>
+            <span class="line">    }</span>
+            <span class="line">    srv.RedisClient.<span class="code-function">Set</span>(key, <span class="code-string">""</span>, 0)</span>
+            <span class="line">    srv.mut.<span class="code-function">Unlock</span>()</span>
+            <span class="line">}</span>
+        </div>
+
+        <p>
+            Now once user received his messages we can start with chatting session we will be using 2 <code>go func()</code> for that one will receive messages from websocket and broadcast it into <code>kafka</code> and the other will receive messages from Kafka and send it to recipient via websocket. In case the recipient is offline, the messages send by the user will be stored into redis.
+        </p>
+
+        <div class="code-block">
+            <span class="line"><span class="code-comment">// Receiver Server</span></span>
+            <span class="line"><span class="code-keyword">go func</span>() {</span>
+            <span class="line">    <span class="code-keyword">for</span> {</span>
+            <span class="line">        <span class="code-comment">// Get messages from kafka which was broadcast by the server to which sender was connected to</span></span>
+            <span class="line">        msg, err := srv.reader.<span class="code-function">ReadMessage</span>(srv.ctx)</span>
+            <span class="line">        <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">            <span class="code-keyword">break</span></span>
+            <span class="line">        }</span>
+            <span class="line">        fmt.<span class="code-function">Println</span>(<span class="code-string">"Kafka Message received: "</span>, <span class="code-keyword">string</span>(msg.Value))</span>
+            <span class="line">        </span>
+            <span class="line">        <span class="code-keyword">var</span> usrMsg UserMessage</span>
+            <span class="line">        </span>
+            <span class="line">        err = json.<span class="code-function">Unmarshal</span>(msg.Value, &usrMsg)</span>
+            <span class="line">        <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">            <span class="code-keyword">break</span></span>
+            <span class="line">        }</span>
+            <span class="line">        fmt.<span class="code-function">Println</span>(<span class="code-string">"Received:"</span>, usrMsg)</span>
+            <span class="line">        </span>
+            <span class="line">        <span class="code-comment">// Retrieve connection object from map and send received messages to user via websocket</span></span>
+            <span class="line">        srv.mut.<span class="code-function">Lock</span>()</span>
+            <span class="line">        <span class="code-comment">// Checking if recipient is connected to the server</span></span>
+            <span class="line">        <span class="code-keyword">if</span> conn, ok := srv.userCons[usrMsg.User]; ok {</span>
+            <span class="line">            <span class="code-comment">// if recipient is connected sending messages via websocket</span></span>
+            <span class="line">            <span class="code-keyword">if</span> err := conn.<span class="code-function">WriteMessage</span>(1, []<span class="code-keyword">byte</span>(usrMsg.Message)); err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">                <span class="code-keyword">break</span></span>
+            <span class="line">            }</span>
+            <span class="line">        }</span>
+            <span class="line">        srv.mut.<span class="code-function">Unlock</span>()</span>
+            <span class="line">    }</span>
+            <span class="line">}()</span>
+        </div>
+
+        <p>
+            Above code receives message from <code>kafka</code> and checks if recipient is connected to the server. If there exist a connection, server sends the message to recipient via websocket.
+        </p>
+    
+        <div class="code-block">
+            <span class="line"><span class="code-comment">// Sender Server</span></span>
+            <span class="line"><span class="code-keyword">for</span> {</span>
+            <span class="line">    <span class="code-comment">// Getting messages from websoket</span></span>
+            <span class="line">    _, body, err := conn.<span class="code-function">ReadMessage</span>()</span>
+            <span class="line">    <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">        <span class="code-keyword">break</span></span>
+            <span class="line">    }</span>
+            <span class="line">    <span class="code-comment">// structure containing recipient user ID and messages</span></span>
+            <span class="line">    <span class="code-keyword">var</span> usrMsg UserMessage</span>
+            <span class="line">    err = json.<span class="code-function">Unmarshal</span>(body, &usrMsg)</span>
+            <span class="line">    <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">        <span class="code-keyword">break</span></span>
+            <span class="line">    }</span>
+            <span class="line">    <span class="code-comment">// checking if recipient is connected to any of the server instances via Redis</span></span>
+            <span class="line">    val, err = srv.RedisClient.<span class="code-function">Get</span>(usrMsg.User).<span class="code-function">Result</span>()</span>
+            <span class="line">    <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> || val == <span class="code-string">"false"</span> {</span>
+            <span class="line">        <span class="code-comment">// if recipient is not connected, saving messages to redis, so that recipient can receive them when he comes online</span></span>
+            <span class="line">        val, err := srv.RedisClient.<span class="code-function">Get</span>(usrMsg.User + <span class="code-string">"msg"</span>).<span class="code-function">Result</span>()</span>
+            <span class="line">        <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">            val = usrMsg.Message</span>
+            <span class="line">        } <span class="code-keyword">else</span> {</span>
+            <span class="line">            <span class="code-comment">// if there are already old messages, appending new messages to them</span></span>
+            <span class="line">            val = val + <span class="code-string">"|"</span> + usrMsg.Message</span>
+            <span class="line">        }</span>
+            <span class="line">        <span class="code-comment">// writing un-recieved messages to redis for recipient to read when he comes online</span></span>
+            <span class="line">        srv.mut.<span class="code-function">Lock</span>()</span>
+            <span class="line">        srv.RedisClient.<span class="code-function">Set</span>(usrMsg.User+<span class="code-string">"msg"</span>, val, 0)</span>
+            <span class="line">        srv.mut.<span class="code-function">Unlock</span>()</span>
+            <span class="line">        </span>
+            <span class="line">        log.<span class="code-function">Printf</span>(<span class="code-string">"Succes: Msg written in redis for user: %v and msg: %v"</span>, usrMsg.User, usrMsg.Message)</span>
+            <span class="line">    } <span class="code-keyword">else</span> {</span>
+            <span class="line">        <span class="code-comment">// In case recipient is online broadcasting message via kafka so that receiver server can get the message</span></span>
+            <span class="line">        tmp := <span class="code-keyword">string</span>(body)</span>
+            <span class="line">        msg := kafka.Message{</span>
+            <span class="line">            Key:   []<span class="code-keyword">byte</span>(usrMsg.User),</span>
+            <span class="line">            Value: []<span class="code-keyword">byte</span>(tmp),</span>
+            <span class="line">        }</span>
+            <span class="line">        <span class="code-comment">// writing message to kafka</span></span>
+            <span class="line">        err = srv.writer.<span class="code-function">WriteMessages</span>(srv.ctx, msg)</span>
+            <span class="line">        <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {</span>
+            <span class="line">            log.<span class="code-function">Printf</span>(<span class="code-string">"Error: %v"</span>, err)</span>
+            <span class="line">        }</span>
+            <span class="line">        log.<span class="code-function">Printf</span>(<span class="code-string">"Succes: Msg written in kafka for user: %v and msg: %v"</span>, usrMsg.User, <span class="code-keyword">string</span>(msg.Value))</span>
+            <span class="line">    }</span>
+            <span class="line">}</span>
+        </div>
+
+        <p>
+            Above code receives <code>json encoded</code> messages from websocket and decode it into the structure. If the recipient is online, the server will broadcast the message into kafka so that the server instance to which recipient is connected will receive the message. In case recipient is offline, the messages will be stores in redis.    
+        </p>
+ 
+        <div class="code-block">
+            <span class="line"><span class="code-comment">// return to handler in case user disconnect from server</span></span>
+            <span class="line"><span class="code-comment">// setting map and redis, so that user appears offline</span></span>
+            <span class="line">srv.mut.<span class="code-function">Lock</span>()</span>
+            <span class="line"><span class="code-function">delete</span>(srv.userCons, inID)</span>
+            <span class="line">srv.RedisClient.<span class="code-function">Set</span>(inID, <span class="code-string">"false"</span>, 0)</span>
+            <span class="line">srv.mut.<span class="code-function">Unlock</span>()</span>
+            <span class="line">fmt.<span class="code-function">Println</span>(<span class="code-string">"User Deleted Redis"</span>)</span>
+        </div>
+
+        <p>
+            Once the connection is disconnected, we will remove the connection object from the map and mark user as offline in redis.
+        </p>
+
+        <p>
+            It is worth to note that in the above code there are 2 channels for redis one store the user un-recieved messages and other to store user online status.
+        </p>
+
+        <p>
+            The code demonstrates how a multi-instance server chatting service will work and how messages will manage such a complex system.
+        </p>
+
+        <p>
+            Below is the <code>main()</code> func we used for the server:
+        </p>
+
+        <div class="code-block">
+            <span class="line"><span class="code-keyword">func</span> <span class="code-function">main</span>() {</span>
+            <span class="line">    srv := <span class="code-function">InitService</span>()</span>
+            <span class="line">    fmt.<span class="code-function">Println</span>(<span class="code-string">"Starting Server..."</span>)</span>
+            <span class="line">    router := chi.<span class="code-function">NewRouter</span>()</span>
+            <span class="line">    router.<span class="code-function">Route</span>(<span class="code-string">"/"</span>, <span class="code-keyword">func</span>(ws chi.Router) {</span>
+            <span class="line">        ws.<span class="code-function">Get</span>(<span class="code-string">"/"</span>, srv.Alive)</span>
+            <span class="line">        ws.<span class="code-function">Get</span>(<span class="code-string">"/read"</span>, srv.ReadMsg)</span>
+            <span class="line">    })</span>
+            <span class="line">    log.<span class="code-function">Fatal</span>(http.<span class="code-function">ListenAndServe</span>(<span class="code-string">":8081"</span>, router))</span>
+            <span class="line">}</span>
+        </div>
+
+        <p>
+            We can test this server by sending websocket request via postman. 
+            Below is the output snippets of postman:
+        </p>
+
+        <img src="user1.png" alt="User 1 Chat Interface" class="diagram-image">
+        <img src="user2.png" alt="User 2 Chat Interface" class="diagram-image">
+
+        <h2>Conclusion</h2>
+        <p>
+            In this blog, we explored real-time chatting service, their system-design and how the messages are handled. Also we have implemented a multi-server instance chatting service which is managed by services like Redis and Kafka, due to which we are able to transmit messages reliably between users with very low latency.
+        </p>
+
+        <div class="blog-tags">
+            <span class="blog-tag">WebSockets</span>
+            <span class="blog-tag">Kafka</span>
+            <span class="blog-tag">Redis</span>
+            <span class="blog-tag">Go</span>
+            <span class="blog-tag">Distributed Systems</span>
+            <span class="blog-tag">Real-time</span>
+        </div>
+
+        <div class="blog-author">
+            <div class="author-image">
+                <img src="/api/placeholder/200/200" alt="Manubhav Jain">
+            </div>
+            <div class="author-content">
+                <h3 class="author-name">Manubhav Jain</h3>
+                <p class="author-bio">Backend engineer specializing in distributed systems and real-time applications. Currently working on scalable messaging infrastructure and cloud-native applications.</p>
+                <div class="author-social">
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="related-posts">
+            <h2 class="related-title">Related Posts</h2>
+            <div class="related-grid">
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="/api/placeholder/400/300" alt="Microservices with Docker">
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">Building Microservices with Docker and Kubernetes</h3>
+                        <p class="related-date">March 15, 2025</p>
+                    </div>
+                </div>
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="/api/placeholder/400/300" alt="Event Sourcing">
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">Event Sourcing Pattern in Distributed Systems</h3>
+                        <p class="related-date">February 28, 2025</p>
+                    </div>
+                </div>
+                <div class="related-card">
+                    <div class="related-image">
+                        <img src="/api/placeholder/400/300" alt="GraphQL APIs">
+                    </div>
+                    <div class="related-content">
+                        <h3 class="related-card-title">Building Efficient GraphQL APIs with Go</h3>
+                        <p class="related-date">April 10, 2025</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="back-to-portfolio">
+            <a href="../index.html" class="button">Back to Portfolio</a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="../index.html#about">About</a>
+                <a href="../index.html#experience">Experience</a>
+                <a href="../index.html#skills">Skills</a>
+                <a href="../index.html#projects">Projects</a>
+                <a href="../index.html#blog">Blog</a>
+                <a href="../index.html#contact">Contact</a>
+            </div>
+            <div class="footer-social">
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+            <p class="footer-text">© 2025 Manubhav Jain. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.style.padding = '15px 50px';
+                header.style.boxShadow = '0 10px 30px -10px rgba(2, 12, 27, 0.7)';
+            } else {
+                header.style.padding = '20px 50px';
+                header.style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
