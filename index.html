@@ -1070,20 +1070,20 @@
                 <div class="blog-row">
                     <div class="blog-card">
                         <div class="blog-image">
-                            <img src="/api/placeholder/400/240" alt="Redis caching strategy diagram">
+                            <img src="Redis PubSub/redis-pub-sub.png" alt="Pub-Sub using Redis">
                         </div>
                         <div class="blog-content">
                             <p class="blog-date">December 10, 2024</p>
-                            <h3 class="blog-title">Advanced Redis Caching Strategies for Backend Developers</h3>
+                            <h3 class="blog-title">Pub-Sub using Redis</h3>
                             <p class="blog-excerpt">
-                                Redis is more than just a key-value store. This post explores advanced caching patterns, eviction policies, and data structures that can dramatically improve your application's performance.
+                                Pub/Sub is a messaging paradigm that consists of defining Publishers and Subscribers which Channels in between them, where Publishers act as “message senders” and Subscribers act as “message receivers”. The Publishers do not send messages directly to Subscribers but rather to Channels; those Channels act as an intermediary between Publishers and Subscribers, the idea is to have those Subscribers to only receive the messages they are interested to, and having them decoupled from the Publishers.
                             </p>
                             <div class="blog-tags">
                                 <span class="blog-tag">Redis</span>
                                 <span class="blog-tag">Caching</span>
                                 <span class="blog-tag">Performance</span>
                             </div>
-                            <a href="#" class="read-more" onclick="openBlogPost(5); return false;">
+                            <a href="Redis PubSub/redis_pub_sub.html" class="read-more" onclick="openBlogPost(5); return false;">
                                 Read More <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>    
