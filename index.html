@@ -161,6 +161,7 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
+            gap: 20px
         }
         
         .company-name {
@@ -456,7 +457,14 @@
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 30px;
         }
-        
+        .blog {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
         .featured-blog {
             grid-column: 1 / -1;
             display: grid;
@@ -787,7 +795,7 @@
     
     <header>
         <nav>
-    <div class="logo">MJ</div>
+    <a href="../index.html" class="logo">MJ</a>
     <div class="hamburger" onclick="toggleNav()">&#9776;</div>
     <div class="nav-links" id="nav-links">
         <a href="#about">About</a>
@@ -967,7 +975,7 @@
             
             <div class="blog-posts">
                 <div class="blog-row">
-                    <div class="featured-blog blog-card">
+                    <div class="blog-card">
                         <div class="blog-image">
                             <div class="featured-badge">Featured</div>
                             <img src="Chatapp/chatting servers.png" alt="Chat application architecture diagram showing websockets, kafka, and redis">
@@ -1014,21 +1022,20 @@
                     
                     <div class="blog-card">
                         <div class="blog-image">
-                            <img src="/api/placeholder/400/240" alt="Database schema optimization diagram">
+                            <img src="PubSub/kafka.png" alt="Pub-Sub Using kafka">
                         </div>
                         <div class="blog-content">
                             <p class="blog-date">February 8, 2025</p>
-                            <h3 class="blog-title">Database Optimization Techniques for High-Traffic Applications</h3>
+                            <h3 class="blog-title">Pub-Sub Using kafka</h3>
                             <p class="blog-excerpt">
-                                When your application serves millions of users, every millisecond counts. This post covers advanced database optimization techniques that helped reduce query times by 70% in our production environment.
+                                Pub/Sub messaging enables you to create an event-driven systems consisting of event producers and consumers, called publishers and subscribers. Publishers asynchronously broadcast the events to communicate, rather than by synchronous remote procedure calls (RPCs), in which publishers must wait for subscribers to receive the data. However, the asynchronous integration in Pub/Sub increases the flexibility and robustness of the overall system.
                             </p>
                             <div class="blog-tags">
-                                <span class="blog-tag">Database</span>
-                                <span class="blog-tag">Performance</span>
-                                <span class="blog-tag">MySQL</span>
-                                <span class="blog-tag">Optimization</span>
+                                <span class="blog-tag">Pub-Sub</span>
+                                <span class="blog-tag">Apache Kafka</span>
+                                <span class="blog-tag">Zookeeper</span>
                             </div>
-                            <a href="#" class="read-more" onclick="openBlogPost(3); return false;">
+                            <a href="PubSub/pub_sub.html" class="read-more" onclick="openBlogPost(3); return false;">
                                 Read More <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
@@ -1038,20 +1045,21 @@
                 <div class="blog-row">
                     <div class="blog-card">
                         <div class="blog-image">
-                            <img src="/api/placeholder/400/240" alt="Microservices architecture diagram">
+                            <img src="Reflect/reflect-in-go.png" alt="Reflection in Golang">
                         </div>
                         <div class="blog-content">
                             <p class="blog-date">January 19, 2025</p>
-                            <h3 class="blog-title">From Monolith to Microservices: A Journey of Incremental Migration</h3>
+                            <h3 class="blog-title">Reflection in Golang</h3>
                             <p class="blog-excerpt">
-                                Breaking down a monolith into microservices is a challenging but rewarding journey. Here's how we approached it incrementally, the challenges we faced, and lessons learned along the way.
+                                The Go programming language is a popular statically-typed, compiled programming language that has a C-like syntax. It is gaining more popularity every day in modern developer communities because of features such as memory safety, garbage collection, concurrency, performance, and a developer-friendly minimal syntax.
+            Go provides a set of libraries known as  <code>Go’s standard library</code>, these libraries has almost all the features we need for a modern programming language. It also offers a package to work with <code>reflection</code>, which is a concept that comes from the <code>metaprogramming</code> paradigm.
                             </p>
                             <div class="blog-tags">
-                                <span class="blog-tag">Microservices</span>
-                                <span class="blog-tag">Architecture</span>
-                                <span class="blog-tag">System Design</span>
+                                <span class="blog-tag">Metaprogramming</span>
+                                <span class="blog-tag">Golang</span>
+                                <span class="blog-tag">Reflect</span>
                             </div>
-                            <a href="#" class="read-more" onclick="openBlogPost(4); return false;">
+                            <a href="Reflect/reflect.html" class="read-more" onclick="openBlogPost(4); return false;">
                                 Read More <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building a Real-Time Chat Application with WebSockets, Kafka and Redis | Manubhav Jain</title>
+    <title>Pub-Sub Using kafka | Manubhav Jain</title>
     <script>
         function toggleNav() {
             document.querySelector('.nav-links').classList.toggle('active');
@@ -560,354 +560,220 @@
     </header>
 
     <section class="blog-header">
-        <img src="chatting servers.png" alt="Chat Application Servers" class="blog-image" style="width: 90%; max-width: 50rem;">
+        <img src="kafka.png" alt="Dashboard" class="blog-image" style="width: 90%; max-width: 50rem;">
         <div class="blog-header-content">
             <p class="blog-category">Distributed Systems</p>
-            <h1 class="blog-title">Building a Real-Time Chat Application with WebSockets, Kafka and Redis</h1>
+            <h1 class="blog-title">Pub-Sub Using kafka</h1>
             <div class="blog-meta">
                 <span><i class="far fa-calendar-alt"></i> April 24, 2025</span>
                 <span><i class="far fa-clock"></i> 10 min read</span>
-                <span><i class="fas fa-tag"></i> WebSockets, Kafka, Redis</span>
+                <span><i class="fas fa-tag"></i> Kafka, Pub-Sub</span>
             </div>
         </div>
     </section>
 
     <div class="blog-content">
-        <h2>Introduction</h2>
+        <h2>What is Pub-Sub?</h2>
         <p>
-            Real-time chat is virtually any online communication that provides a real-time or live transmission of text messages from sender to receiver. A variety of software programs are available to enable real-time chat between individuals using Internet services. Chat messages are often brief so as to let other participants respond swiftly, thereby creating a feeling much like a spoken conversation. This mode of communication differentiates real-time chats from other forms of text-based online communications, including emails and Internet forums. Real-time chat uses Web-based apps, which permit communication that is usually addressed directly but is anonymous among users in a multi-user environment.
+            Pub/Sub messaging enables you to create an event-driven systems consisting of event producers and consumers, called publishers and subscribers. Publishers asynchronously broadcast the events to communicate, rather than by synchronous remote procedure calls (RPCs), in which publishers must wait for subscribers to receive the data. However, the asynchronous integration in Pub/Sub increases the flexibility and robustness of the overall system.
         </p>
-        <p>
-            WebSockets are a great fit for applications like chats or simple games. Chat sessions are usually long-lived, with the client receiving messages from other participants over a long period of time. Chat sessions are also bidirectional – clients want to send chat messages, and see chat messages from others.
-            Unlike regular HTTP requests, WebSocket connections can be kept open for a long time and have an easy interface for exchanging data between the client and server in the form of frames. WebSockets are also a widely supported technology. All modern browsers can work with WebSockets out of the box, and frameworks to work with WebSockets exist in many programming languages and on many platforms.
-        </p>
+        <p align="center">
+            <img src="https://miro.medium.com/max/1400/1*iUWxneAQ_kozzLPkFsrakw.png">
+          
+          </p>
 
-        <h2>Prerequisite</h2>
+          <h3>Apache Kafka</h3>
         <p>
-            Before we move on to implementation there are basic terms and technologies we need to be familiar with.
-        </p>
-        
-        <h3>Kafka:</h3>
-        <p>
-            In order to handle large number of connections, we will be needing multiple instances of a server, thus there will be a need for a medium for server to server communication. In a very fast, reliable, persisted, fault-tolerance and zero downtime manner, Kafka offers a Pub-sub and queue-based messaging system. The producers send the message to a topic and the consumer can select any one of the message systems according to their wish.
+            Apache Kafka is the open-source stream processing software platform, which is written in Scala and Java. Apache Kafka is a fast, scalable, fault-tolerant messaging system which enables communication between producers and consumers using message-based topics. Kakfa is highy resilient of node failures and support auto-recovery. This makes Apache Kafka ideal for communication and integration between components of large-scale data systems in real-world data systems.
         </p>
         
-        <h3>Redis:</h3>
-        <p>
-            For keeping account of online users and managing messages between multiple servers we would be needing a fast and reliable database system. Redis delivers sub-millisecond response times, enabling millions of requests per second for real-time applications in industries like gaming, ad-tech, financial services, healthcare, and IoT. Today, Redis is one of the most popular open source engines today, named the "Most Loved" database by Stack Overflow for five consecutive years. Because of its fast performance, Redis is a popular choice for caching, session management, gaming, leaderboards, real-time analytics, geospatial, ride-hailing, chat/messaging, media streaming, and pub/sub apps.
-        </p>
-
-        <h2>Building a Chatting Application</h2>
-        <p>
-            Now, Since we have gotten familiar with the technologies we will be using, below is the design diagram for our application:
-        </p>
-        
-        <img src="Chatapp/ChattingDesign.png" alt="Chat Application Architecture Diagram" class="diagram-image">
+        <h3>Brokers</h3>
         
         <p>
-            For our application, we will build a messaging server in <code>Golang</code>
-        </p>
-
-        <h3>Docker-compose setup</h3>
-        <p>
-            Below is the docker-compose file we will be using to set up our services:
+            Kafka consists of a network of machines called brokers. these may not be separate physical servers but containers running on pods running on virtualized servers running on actual processors in a physical datacenter somewhere. However they are deployed, they are independent machines each running the Kafka broker process. Since, there can be multiple brokers there needs to be a central service which keeps track of all the states and configurations of all kafka brokers, hence we introduce zookeeper. 
         </p>
         
-        <div class="code-block">version: '2'
-services:
-    zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-    environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
-    ports:
-        - 22181:2181
-
-    kafka:
-        image: confluentinc/cp-kafka:latest
-        depends_on:
-            - zookeeper
-        ports:
-            - 9093:9093
-        environment:
-              KAFKA_BROKER_ID: 1
-              KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-              KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
-              KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-              KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-              KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-              KAFKA_CREATE_TOPICS: my-kafka-topic
-    redis:
-        image: 'bitnami/redis:latest'
-        ports:
-            - "6379:6379"
-        environment:
-            - ALLOW_EMPTY_PASSWORD=yes</div>
-
+        <h3>Zookeeper</h3>
         <p>
-            In the above <code>docker-compose.yml</code> file images used:
+            Kafka and ZooKeeper work in conjunction to form a complete Kafka Cluster. With ZooKeeper providing the distributed clustering services, and Kafka handling the actual data streams and connectivity to clients. At a detailed level, ZooKeeper handles the leadership election of Kafka brokers and manages service discovery as well as cluster topology so each broker knows when brokers have entered or exited the cluster, when a broker dies and who the preferred leader node is for a given topic/partition pair. It also tracks when topics are created or deleted from the cluster and maintains a topic list.
+        <p>
+            For several years, the Apache Kafka community has been developing a new way to run Apache Kafka with self-managed metadata. Kafka 3.3 introduces a new mode, called KRaft mode, which improves partition scalability and resiliency while simplifying deployments of Apache Kafka. It also eliminates the need to run an Apache ZooKeeper cluster alongside every Apache Kafka cluster. Although KRaft marks as production ready for only new clusters, there are some features that are only supported by Apache Zookeeper.
         </p>
-        <ul>
-            <li>For Redis: <code>bitnami/redis:latest</code></li>
-            <li>For Kafka: <code>confluentinc/cp-kafka:latest</code></li>
-        </ul>
+
+        <h3>Kafka logging Mechanism</h3>
+        <p>
+            Kafka is based on commit log, which means Kafka stores a log of records and it will keep a track of what’s happening. This log storage mechanism is similar with common RDBMS uses. The mechanisms is  more like a queue where you always append a new data into the tail. It may seems simple, but Kafka can maintain the records into several partitions with same topic. A topic is a category or feed name to which records are published. So, rather than just write into one queue, Kafka can writes into several queue with same topic name.
+        <p>
         
+        <h2>Basic Pub-Sub Application using kafka and golang</h2>    
+        <h3>Setup Kafka using Docker</h3>
+         
+        <p>Here is the docker-compose.yaml used to setup kafka:</p>
+        <div class="code-block">
+            version: '2'
+            services:
+                zookeeper:
+                    image: confluentinc/cp-zookeeper:latest
+                    environment:
+                        ZOOKEEPER_CLIENT_PORT: 2181
+                        ZOOKEEPER_TICK_TIME: 2000
+                    ports:
+                         - 22181:2181
+            
+                kafka:
+                    image: confluentinc/cp-kafka:latest
+                    depends_on:
+                        - zookeeper
+                    ports:
+                        - 9093:9093
+                    environment:
+                        KAFKA_BROKER_ID: 1
+                        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+                        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+                        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+                        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+                        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+                        KAFKA_CREATE_TOPICS: my-kafka-topic
+        </div>        
         <p>
-            Now that we have set up out docker-compose file we need to establish our services with our server using golang.
+            In this docker-compose file kafka image used is:
+            <code>confluentinc/cp-kafka:latest</code>
+            And the zookeeper image used is 
+            <code>confluentinc/cp-zookeeper:latest</code>
+            Since it is a basic pubsub we would be using only one broker instance
+            and the topics created is: <code>my-kafka-topic</code>
+            
+            Now since the kafka image has been set up now we need to define publishers and consumers.
+            
+            This will be done using go-library:
+            <code>github.com/segmentio/kafka-go</code>
         </p>
+
+        <p>The main part of publishing message into Kafka is you must create the connection into Kafka then you can produce a message to Kafka using established connection. For this we will be creating kakfa-writer function in which we define all the kafka configurations and establish connections to kafka.</p>
         
-        <p>
-            For this we would be using golang library:
-        </p>
-        <ul>
-            <li>For Redis: <code>github.com/gomodule/redigo/redis</code></li>
-            <li>For Kafka: <code>github.com/segmentio/kafka-go</code></li>
-            <li>For Websockets: <code>github.com/gorilla/websocket</code></li>
-        </ul>
-
-        <p>
-            To create a server lets create a server object to access the services:
-        </p>
-
-        <div class="code-block">type Server struct {
-    userCons    map[string]*websocket.Conn
-    ctx         context.Context
-    reader      *kafka.Reader
-    writer      *kafka.Writer
-    mut         sync.Mutex
-    RedisClient *redis.Client
-}</div>
-
-        <p>
-            To initialize these services below is the <code>InitService()</code> function:
-        </p>
-
-        <div class="code-block">func InitService() *Server {
-    return &Server{
-        userCons: make(map[string]*websocket.Conn),
-        ctx:      context.Background(),
-        reader: kafka.NewReader(kafka.ReaderConfig{
-            Brokers: []string{"localhost:9093"},
-            Topic:   "my-kafka-topic",
-            GroupID: "group1",
-        }),
-        writer: &kafka.Writer{
-            Addr:     kafka.TCP("localhost:9093"),
-            Topic:    "my-kafka-topic",
-            Balancer: &kafka.Murmur2Balancer{},
-        },
-        mut: sync.Mutex{},
-        RedisClient: redis.NewClient(&redis.Options{
-            Addr:     "localhost:6379",
-            Password: "",
-            DB:       0,
-        }),
-    }
-}</div>
-
-        <p>
-            Now that we have initialized our services, we need to create a structure to encode-decode messages.
-            Below is the structure we will be using:
-        </p>
-
-        <div class="code-block">type UserMessage struct {
-    User    string `json:"user"`
-    Message string `json:"msg"`
-}</div>
-
-        <p>
-            The user in the structure will have recipient user ID and Message we need to send.
-        </p>
-
-        <h3>Creating WebSocket Handler</h3>
-        <p>
-            Now, we can start creating our handler to receive and send messages.
-            Let's start with initialing a handshake using <code>Upgrade()</code> method:
-        </p>
-
-        <div class="code-block">// Upgrade your connection to websocket connection
-conn, err := upgrades.Upgrade(w, r, nil)
-if err != nil {
-    w.WriteHeader(http.StatusInternalServerError)
-    return
-}</div>
-
-        <p>
-            Once handshake is done we need to check for sender user ID from parameters and mark him online. To do that we will be using Redis and userCons map to store connection object and tag user online:
-        </p>
-
-        <div class="code-block">// Get Sender user ID from parameter
-inID := r.URL.Query().Get("user")
-
-// Writing connection in user connection map and into the redis to keep account if user is online into which server
-srv.mut.Lock()
-srv.userCons[inID] = conn
-srv.RedisClient.Set(inID, "true", 0)
-srv.mut.Unlock()</div>
-
-        <p>
-            Once we mark user online we will be sending user un-recieved messages which he may got when he was offline. We are storing un-recieved messages into our Redis Database:
-        </p>
-
-        <div class="code-block">// Sending un-recieved messages which was sent when user was offline
-
-// Retrieving messages from Redis server
-val, err := srv.RedisClient.Get(inID + "msg").Result()
-if err == nil && val != "" {
-    // Function to send old messaged to the user
-    go srv.SendOldMsg(inID, val)
-}</div>
-
-        <div class="code-block">func (srv *Server) SendOldMsg(key string, uMsgs string) {
-    fmt.Println("Sending old messages")
-    // splitting old messages
-    messages := strings.Split(uMsgs, "|")
-    srv.mut.Lock()
-    for _, msg := range messages {
-        // sending un-received message to the user via websocket
-        if err := srv.userCons[key].WriteMessage(1, []byte(msg)); err != nil {
-            return
-        }
-    }
-    srv.RedisClient.Set(key, "", 0)
-    srv.mut.Unlock()
-}</div>
-
-        <p>
-            Now once user received his messages we can start with chatting session we will be using 2 <code>go func()</code> for that one will receive messages from websocket and broadcast it into <code>kafka</code> and the other will receive messages from Kafka and send it to recipient via websocket. In case the recipient is offline, the messages send by the user will be stored into redis.
-        </p>
-
-        <div class="code-block">// Receiver Server
-go func() {
-    for {
-        // Get messages from kafka which was broadcast by the server to which sender was connected to
-        msg, err := srv.reader.ReadMessage(srv.ctx)
-        if err != nil {
-            break
-        }
-        fmt.Println("Kafka Message received: ", string(msg.Value))
-        
-        var usrMsg UserMessage
-        
-        err = json.Unmarshal(msg.Value, &usrMsg)
-        if err != nil {
-            break
-        }
-        fmt.Println("Received:", usrMsg)
-        
-        // Retrieve connection object from map and send received messages to user via websocket
-        srv.mut.Lock()
-        // Checking if recipient is connected to the server
-        if conn, ok := srv.userCons[usrMsg.User]; ok {
-            // if recipient is connected sending messages via websocket
-            if err := conn.WriteMessage(1, []byte(usrMsg.Message)); err != nil {
-                break
+        <div class="code-block">
+            func getKafkaWriter(kafkaURL, topic string) *kafka.Writer {
+                return &kafka.Writer{
+                    Addr:     kafka.TCP(kafkaURL),
+                    Topic:    topic,
+                    Balancer: &kafka.LeastBytes{},
+                }
             }
-        }
-        srv.mut.Unlock()
-    }
-}()</div>
+        </div>
 
         <p>
-            Above code receives message from <code>kafka</code> and checks if recipient is connected to the server. If there exist a connection, server sends the message to recipient via websocket.
+            After the kafka connection is established, the <code>kafkaWriter</code> object can be used to broadcast data from publisher.
+            Below is the basic golang producer Method we have implemented:
         </p>
-    
-        <div class="code-block">// Sender Server
-for {
-    // Getting messages from websoket
-    _, body, err := conn.ReadMessage()
-    if err != nil {
-        break
-    }
-    // structure containing recipient user ID and messages
-    var usrMsg UserMessage
-    err = json.Unmarshal(body, &usrMsg)
-    if err != nil {
-        break
-    }
-    // checking if recipient is connected to any of the server instances via Redis
-    val, err = srv.RedisClient.Get(usrMsg.User).Result()
-    if err != nil || val == "false" {
-        // if recipient is not connected, saving messages to redis, so that recipient can receive them when he comes online
-        val, err := srv.RedisClient.Get(usrMsg.User + "msg").Result()
-        if err != nil {
-            val = usrMsg.Message
-        } else {
-            // if there are already old messages, appending new messages to them
-            val = val + "|" + usrMsg.Message
-        }
-        // writing un-recieved messages to redis for recipient to read when he comes online
-        srv.mut.Lock()
-        srv.RedisClient.Set(usrMsg.User+"msg", val, 0)
-        srv.mut.Unlock()
+        <div class="code-block">
+            func producer(kafkaWriter *kafka.Writer, ctx context.Context) {
+                var body string
+                for {
+                    fmt.Scanf("%v", &body)
+                    msg := kafka.Message{
+                    Key:   []byte(fmt.Sprintf("address-%s", broker1Address)),
+                    Value: []byte(body),
+                    }
+                    err := kafkaWriter.WriteMessages(ctx, msg)
+                    if err != nil {
+                        log.Fatalln(err)
+                    }
+                }
+            }
+        </div>
+
+        <p>
+            In this we have created a message object which have a key value structure and we are sending the message via kafkaWriter object we have implement earlier.
+
+            Once the  message is published the consumer who is subscribed to same topic to which kafka broker is configured can recieved it.
+            Below is the basic golang consumer method we have implemented:           
+        </p>
+
+        <div class="code-block">
+            func consume(ctx context.Context, group string) {
+                r := kafka.NewReader(kafka.ReaderConfig{
+                    Brokers: []string{broker1Address},
+                    Topic:   topic,
+                    GroupID: group,
+                })
         
-        log.Printf("Succes: Msg written in redis for user: %v and msg: %v", usrMsg.User, usrMsg.Message)
-    } else {
-        // In case recipient is online broadcasting message via kafka so that receiver server can get the message
-        tmp := string(body)
-        msg := kafka.Message{
-            Key:   []byte(usrMsg.User),
-            Value: []byte(tmp),
-        }
-        // writing message to kafka
-        err = srv.writer.WriteMessages(srv.ctx, msg)
-        if err != nil {
-            log.Printf("Error: %v", err)
-        }
-        log.Printf("Succes: Msg written in kafka for user: %v and msg: %v", usrMsg.User, string(msg.Value))
-    }
-}</div>
+                for {
+                    msg, err := r.ReadMessage(ctx)
+                    if err != nil {
+                        panic("could not read message " + err.Error())
+                    }
+                    fmt.Printf("%v received: %v", group, string(msg.Value))
+                    fmt.Println()
+                    }
+            }
+        </div>
 
         <p>
-            Above code receives <code>json encoded</code> messages from websocket and decode it into the structure. If the recipient is online, the server will broadcast the message into kafka so that the server instance to which recipient is connected will receive the message. In case recipient is offline, the messages will be stores in redis.    
+            Here we have implemented a kafka reader object with same configuration and topics as kafka broker to establish connection with kafka and recieve messages.
+
+            Below is the <code>main()</code> function for the produce and consumer
+            
         </p>
- 
-        <div class="code-block">// return to handler in case user disconnect from server
-// setting map and redis, so that user appears offline
-srv.mut.Lock()
-delete(srv.userCons, inID)
-srv.RedisClient.Set(inID, "false", 0)
-srv.mut.Unlock()
-fmt.Println("User Deleted Redis")</div>
+
+        <div class="code-block">
+            func main() {
+                ctx := context.Background()
+                go producer(getKafkaWriter(broker1Address, topic), ctx)
+                go consume(ctx, "grp1")
+                time.Sleep(time.Minute * 2)
+            }              
+        </div>
 
         <p>
-            Once the connection is disconnected, we will remove the connection object from the map and mark user as offline in redis.
+            Below is the output of above-mentioned code
+            <code>
+            Hello
+            grp1 received: Hello
+            World
+            grp1 received: World
+            
+            Process finished with the exit code 0
+            </code>
         </p>
 
-        <p>
-            It is worth to note that in the above code there are 2 channels for redis one store the user un-recieved messages and other to store user online status.
-        </p>
 
-        <p>
-            The code demonstrates how a multi-instance server chatting service will work and how messages will manage such a complex system.
-        </p>
 
-        <p>
-            Below is the <code>main()</code> func we used for the server:
-        </p>
-
-        <div class="code-block">func main() {
-    srv := InitService()
-    fmt.Println("Starting Server...")
-    router := chi.NewRouter()
-    router.Route("/", func(ws chi.Router) {
-        ws.Get("/", srv.Alive)
-        ws.Get("/read", srv.ReadMsg)
-    })
-    log.Fatal(http.ListenAndServe(":8081", router))
-}</div>
-
+<h2>Strengths of Kafka</h2>
+<h3>a. High-throughput</h3>
 <p>
-    We can test this server by sending websocket request via postman. 
-    Below is the output snippets of postman:
+    Without having not so large hardware, Kafka is capable of handling high-velocity and high-volume data. Also, able to support message throughput of thousands of messages per second.
 </p>
-
-<img src="user1.png" alt="User 1 Chat Interface" class="diagram-image">
-<img src="user2.png" alt="User 2 Chat Interface" class="diagram-image">
-
-<h2>Conclusion</h2>
+<h3>b. Low Latency</h3>
 <p>
-    In this blog, we explored real-time chatting service, their system-design and how the messages are handled. Also we have implemented a multi-server instance chatting service which is managed by services like Redis and Kafka, due to which we are able to transmit messages reliably between users with very low latency.
+    It is capable of handling these messages with the very low latency of the range of milliseconds, demanded by most of the new use cases.
+</p>
+<h3>c. Fault-Tolerant</h3>
+<p>
+    One of the best advantages is Fault Tolerance. There is an inherent capability in Kafka, to be resistant to node/machine failure within a cluster. 
+</p>
+<h3>d. Durability</h3>
+<p>
+    Here, durability refers to the persistence of data/messages on disk. Also, messages replication is one of the reasons behind durability, hence messages are never lost.
+</p>
+<h3>e. Scalability</h3>
+<p>
+    Without incurring any downtime on the fly by adding additional nodes, Kafka can be scaled-out. Moreover, inside the Kafka cluster, the message handling is fully transparent and these are seamless.
+</p>
+<h3>f. Distributed</h3>
+<p>
+    The distributed architecture of Kafka makes it scalable using capabilities like replication and partitioning.
+</p>
+<h3>g. Message Broker Capabilities</h3>
+<p>
+    Kafka tends to work very well as a replacement for a more traditional message broker. Here, a message broker refers to an intermediary program, which translates messages from the formal messaging protocol of the publisher to the formal messaging protocol of the receiver.
+</p>
+<h3>h. High Concurrency</h3>
+<p>
+Kafka is able to handle thousands of messages per second and that too in low latency conditions with high throughput. In addition, it permits the reading and writing of messages into it at high concurrency.
+</p>
+<h3>i. Consumer Friendly</h3>
+<p>
+It is possible to integrate with the variety of consumers using Kafka. The best part of Kafka is, it can behave or act differently according to the consumer, that it integrates with because each customer has a different ability to handle these messages, coming out of Kafka. Moreover, Kafka can integrate well with a variety of consumers written in a variety of languages.
 </p>
 
 <div class="blog-tags">
@@ -921,16 +787,16 @@ fmt.Println("User Deleted Redis")</div>
 
 <div class="blog-author">
     <a href="../index.html" class="logo">MJ</a>
-<div class="author-content">
-    <h3 class="author-name">Manubhav Jain</h3>
-    <p class="author-bio">Backend engineer specializing in distributed systems and real-time applications. Currently working on scalable messaging infrastructure and cloud-native applications.</p>
-    <div class="author-social">
-        <a href="https://github.com/mannu2411"><i class="fab fa-github"></i></a>
-        <a href="https://leetcode.com/u/mannu2411/" title="LeetCode"><i class="fas fa-code"></i></a>
-        <a href="https://www.linkedin.com/in/manubhav-jain-55382a154/"><i class="fab fa-linkedin"></i></a>
-        <a href="#"><i class="fas fa-globe"></i></a>
+    <div class="author-content">
+        <h3 class="author-name">Manubhav Jain</h3>
+        <p class="author-bio">Backend engineer specializing in distributed systems and real-time applications. Currently working on scalable messaging infrastructure and cloud-native applications.</p>
+        <div class="author-social">
+            <a href="https://github.com/mannu2411"><i class="fab fa-github"></i></a>
+            <a href="https://leetcode.com/u/mannu2411/" title="LeetCode"><i class="fas fa-code"></i></a>
+            <a href="https://www.linkedin.com/in/manubhav-jain-55382a154/"><i class="fab fa-linkedin"></i></a>
+            <a href="#"><i class="fas fa-globe"></i></a>
+        </div>
     </div>
-</div>
 </div>
 
 <div class="related-posts">

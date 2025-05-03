@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building a Real-Time Chat Application with WebSockets, Kafka and Redis | Manubhav Jain</title>
+    <title>Metaprogramming Paradigm: Reflection in Golang | Manubhav Jain</title>
     <script>
         function toggleNav() {
             document.querySelector('.nav-links').classList.toggle('active');
@@ -560,14 +560,14 @@
     </header>
 
     <section class="blog-header">
-        <img src="chatting servers.png" alt="Chat Application Servers" class="blog-image" style="width: 90%; max-width: 50rem;">
+        <img src="reflect-in-go.png" alt="Dashboard" class="blog-image" style="width: 90%; max-width: 50rem;">
         <div class="blog-header-content">
-            <p class="blog-category">Distributed Systems</p>
-            <h1 class="blog-title">Building a Real-Time Chat Application with WebSockets, Kafka and Redis</h1>
+            <p class="blog-category">Metaprogramming Paradigm</p>
+            <h1 class="blog-title">Reflection in Golang</h1>
             <div class="blog-meta">
                 <span><i class="far fa-calendar-alt"></i> April 24, 2025</span>
                 <span><i class="far fa-clock"></i> 10 min read</span>
-                <span><i class="fas fa-tag"></i> WebSockets, Kafka, Redis</span>
+                <span><i class="fas fa-tag"></i> Kafka, Pub-Sub</span>
             </div>
         </div>
     </section>
@@ -575,339 +575,196 @@
     <div class="blog-content">
         <h2>Introduction</h2>
         <p>
-            Real-time chat is virtually any online communication that provides a real-time or live transmission of text messages from sender to receiver. A variety of software programs are available to enable real-time chat between individuals using Internet services. Chat messages are often brief so as to let other participants respond swiftly, thereby creating a feeling much like a spoken conversation. This mode of communication differentiates real-time chats from other forms of text-based online communications, including emails and Internet forums. Real-time chat uses Web-based apps, which permit communication that is usually addressed directly but is anonymous among users in a multi-user environment.
+            The Go programming language is a popular statically-typed, compiled programming language that has a C-like syntax. It is gaining more popularity every day in modern developer communities because of features such as memory safety, garbage collection, concurrency, performance, and a developer-friendly minimal syntax.
+            Go provides a set of libraries known as  <code>Go’s standard library</code>, these libraries has almost all the features we need for a modern programming language. It also offers a package to work with <code>reflection</code>, which is a concept that comes from the <code>metaprogramming</code> paradigm.
         </p>
-        <p>
-            WebSockets are a great fit for applications like chats or simple games. Chat sessions are usually long-lived, with the client receiving messages from other participants over a long period of time. Chat sessions are also bidirectional – clients want to send chat messages, and see chat messages from others.
-            Unlike regular HTTP requests, WebSocket connections can be kept open for a long time and have an easy interface for exchanging data between the client and server in the form of frames. WebSockets are also a widely supported technology. All modern browsers can work with WebSockets out of the box, and frameworks to work with WebSockets exist in many programming languages and on many platforms.
+        <p align="center">
+            <img src="ReflectDiagram.png" alt="Reflection Diagram" class="diagram-image">
         </p>
 
-        <h2>Prerequisite</h2>
+        <h3>Metaprogramming</h3>
         <p>
-            Before we move on to implementation there are basic terms and technologies we need to be familiar with.
+            Metaprogramming is a programming technique in which computer programs have the ability to treat other programs as their data. It means that a program can be designed to read, generate, analyze or transform other programs, and even modify itself during runtime. It allows programs a greater flexibility to efficiently handle new situations without recompilation.
+            Metaprogramming can be used to move computations from run-time to compile-time, to generate code using compile time computations, and to enable self-modifying code. The ability of a programming language to be its own metalanguage is called reflection. Reflection is a valuable language feature to facilitate metaprogramming.
         </p>
         
-        <h3>Kafka:</h3>
+        <h3>Reflection</h3>
         <p>
-            In order to handle large number of connections, we will be needing multiple instances of a server, thus there will be a need for a medium for server to server communication. In a very fast, reliable, persisted, fault-tolerance and zero downtime manner, Kafka offers a Pub-sub and queue-based messaging system. The producers send the message to a topic and the consumer can select any one of the message systems according to their wish.
+            Reflection is a sub-topic of the metaprogramming paradigm. Almost all popular languages expose internal APIs to handle metaprogramming for the particular programming language itself. These APIs are known as reflection APIs, and they serve as a particular programming language’s ability to inspect, manipulate, and execute the structure of the code.
+            Reflection provides us features like:
+            - Inspect the properties of a struct
+            - Check whether a function exists in a struct instance
+            - Check an atomic type of unknown variable with reflection APIs
+        </p>
+        <p>
+            The Go <code>reflect</code> package gives you features to inspect and manipulate an object at runtime. Reflection is an extremely powerful tool for developers and extends the horizon of any programming language. Types, Kinds and Values are three important pieces of reflection that are used in order to find out information.
         </p>
         
-        <h3>Redis:</h3>
+        <h2>Reflection in Go</h2>
         <p>
-            For keeping account of online users and managing messages between multiple servers we would be needing a fast and reliable database system. Redis delivers sub-millisecond response times, enabling millions of requests per second for real-time applications in industries like gaming, ad-tech, financial services, healthcare, and IoT. Today, Redis is one of the most popular open source engines today, named the "Most Loved" database by Stack Overflow for five consecutive years. Because of its fast performance, Redis is a popular choice for caching, session management, gaming, leaderboards, real-time analytics, geospatial, ride-hailing, chat/messaging, media streaming, and pub/sub apps.
+            The foundation of Go reflection is based around Values, Types and Kinds.These are defined in the package and are of the type reflect.Value, reflect.Type and reflect.Kind and can be obtained using the methods:
+                - reflect.ValueOf(x interface{}).
+                - reflect.TypeOf(x interface{}).
+                - Type.Kind().
         </p>
+        <p>
+            Although, terms kind and types seems to be similar, A Type is the representation of a type in Go. For example, let say a user is a custom-defined type in go, the name assigned by the user is stored in as <code>Type</code>, whereas A Kind is the representation of the type of <code>Type</code>. For example in user custom-defined types, the data-type of the <code>Type</code> will be the <code>Kind</code>.
+        </p>
+         
+        <p>Let take a look on the code below:</p>
+        <div class="code-block">
+            package main
 
-        <h2>Building a Chatting Application</h2>
-        <p>
-            Now, Since we have gotten familiar with the technologies we will be using, below is the design diagram for our application:
-        </p>
+            import (
+                "fmt"
+                "reflect"
+            )
         
-        <img src="Chatapp/ChattingDesign.png" alt="Chat Application Architecture Diagram" class="diagram-image">
+            type myType string
         
+            func main() {
+                i := myType("Hello World")
+                value := reflect.ValueOf(i)
+                kind := value.Kind()
+                typ := reflect.TypeOf(i)
+                fmt.Println("Value:- ", value, " Type:- ", typ, " Kind:- ", kind)
+            }
+        </div>        
         <p>
-            For our application, we will build a messaging server in <code>Golang</code>
-        </p>
-
-        <h3>Docker-compose setup</h3>
-        <p>
-            Below is the docker-compose file we will be using to set up our services:
-        </p>
+            We have defined a custom type named <code>myType</code> which takes the string value. The output of the above code will be:
         
-        <div class="code-block">version: '2'
-services:
-    zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-    environment:
-        ZOOKEEPER_CLIENT_PORT: 2181
-        ZOOKEEPER_TICK_TIME: 2000
-    ports:
-        - 22181:2181
-
-    kafka:
-        image: confluentinc/cp-kafka:latest
-        depends_on:
-            - zookeeper
-        ports:
-            - 9093:9093
-        environment:
-              KAFKA_BROKER_ID: 1
-              KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-              KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
-              KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-              KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-              KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-              KAFKA_CREATE_TOPICS: my-kafka-topic
-    redis:
-        image: 'bitnami/redis:latest'
-        ports:
-            - "6379:6379"
-        environment:
-            - ALLOW_EMPTY_PASSWORD=yes</div>
-
-        <p>
-            In the above <code>docker-compose.yml</code> file images used:
-        </p>
-        <ul>
-            <li>For Redis: <code>bitnami/redis:latest</code></li>
-            <li>For Kafka: <code>confluentinc/cp-kafka:latest</code></li>
-        </ul>
+            Success #stdin #stdout 0s 5592KB
+            
+            Value:-  Hello World  Type:-  main.myType  Kind:-  string
         
-        <p>
-            Now that we have set up out docker-compose file we need to establish our services with our server using golang.
-        </p>
+            As you can see the type of the aforementioned struct  is <code>main.myType</code> which would be its name and the kind is <code>string</code>.
         
-        <p>
-            For this we would be using golang library:
-        </p>
-        <ul>
-            <li>For Redis: <code>github.com/gomodule/redigo/redis</code></li>
-            <li>For Kafka: <code>github.com/segmentio/kafka-go</code></li>
-            <li>For Websockets: <code>github.com/gorilla/websocket</code></li>
-        </ul>
-
-        <p>
-            To create a server lets create a server object to access the services:
         </p>
 
-        <div class="code-block">type Server struct {
-    userCons    map[string]*websocket.Conn
-    ctx         context.Context
-    reader      *kafka.Reader
-    writer      *kafka.Writer
-    mut         sync.Mutex
-    RedisClient *redis.Client
-}</div>
+        <h3>Use case and Implementation of reflection in Go</h3>
+        <p>In modern metaprogramming paradigm, reflection can have many helpful use cases, some of them are:
+            - Programmers can use reflection to solve programming problems with less code
+            - - e.g., if you are using a struct instance to build a SQL query, you can use reflection to extract struct fields without hardcoding every struct field name
+            - Since reflection offers a way to examine the program structure, it is possible to build static code analyzers by using it
+            - We can dynamically execute code with the help of the reflection API
+            - - e.g., you can find existing methods of a struct and call them by name
+        </p>
+        <p>Let's take use case to get a deeper understanding of ``reflection in go``.</p>
+        <p>Let's take a structure: </p>
+        <div class="code-block">
+            type DataReflect struct {
+                S  string
+                I  int
+                F  float32
+                Mp map[string]interface{}
+            }
+        </div>
 
         <p>
-            To initialize these services below is the <code>InitService()</code> function:
+            The above structure can store multiple data-types and also store nested structures.
+The use case is we need to process all the string that is stored within the above structure without actually reading the data.
         </p>
-
-        <div class="code-block">func InitService() *Server {
-    return &Server{
-        userCons: make(map[string]*websocket.Conn),
-        ctx:      context.Background(),
-        reader: kafka.NewReader(kafka.ReaderConfig{
-            Brokers: []string{"localhost:9093"},
-            Topic:   "my-kafka-topic",
-            GroupID: "group1",
-        }),
-        writer: &kafka.Writer{
-            Addr:     kafka.TCP("localhost:9093"),
-            Topic:    "my-kafka-topic",
-            Balancer: &kafka.Murmur2Balancer{},
-        },
-        mut: sync.Mutex{},
-        RedisClient: redis.NewClient(&redis.Options{
-            Addr:     "localhost:6379",
-            Password: "",
-            DB:       0,
-        }),
-    }
-}</div>
+        <p>Below is the <code>main()</code> function for the above use case:</p>
+        <div class="code-block">
+            func main() {
+                data := &DataReflect{
+                            S: "Hello",
+                            I: 32,
+                            F: 32.567,
+                            Mp: map[string]interface{}{
+                                "tag1": "World",
+                                "tag2": 2,
+                                "tag3": true,
+                                "tag4": DataReflect{
+                                    S:  "Reflection",
+                                    I:  45,
+                                    F:  89.234,
+                                    Mp: map[string]interface{}{},
+                                    },
+                                },
+                        }
+                reflectString(data)
+            }
+        </div>
 
         <p>
-            Now that we have initialized our services, we need to create a structure to encode-decode messages.
-            Below is the structure we will be using:
+            In the above code, we have an object data which has a complex structure, if we have to implement the code for the aforementioned use case the code will be way too complex. Hence, reflection is much faster and easier way to deal with such use cases.        
         </p>
 
-        <div class="code-block">type UserMessage struct {
-    User    string `json:"user"`
-    Message string `json:"msg"`
-}</div>
+        <p>Below is the recursive function we have used:</p>
 
-        <p>
-            The user in the structure will have recipient user ID and Message we need to send.
-        </p>
+        <div class="code-block">
 
-        <h3>Creating WebSocket Handler</h3>
-        <p>
-            Now, we can start creating our handler to receive and send messages.
-            Let's start with initialing a handshake using <code>Upgrade()</code> method:
-        </p>
-
-        <div class="code-block">// Upgrade your connection to websocket connection
-conn, err := upgrades.Upgrade(w, r, nil)
-if err != nil {
-    w.WriteHeader(http.StatusInternalServerError)
-    return
-}</div>
-
-        <p>
-            Once handshake is done we need to check for sender user ID from parameters and mark him online. To do that we will be using Redis and userCons map to store connection object and tag user online:
-        </p>
-
-        <div class="code-block">// Get Sender user ID from parameter
-inID := r.URL.Query().Get("user")
-
-// Writing connection in user connection map and into the redis to keep account if user is online into which server
-srv.mut.Lock()
-srv.userCons[inID] = conn
-srv.RedisClient.Set(inID, "true", 0)
-srv.mut.Unlock()</div>
-
-        <p>
-            Once we mark user online we will be sending user un-recieved messages which he may got when he was offline. We are storing un-recieved messages into our Redis Database:
-        </p>
-
-        <div class="code-block">// Sending un-recieved messages which was sent when user was offline
-
-// Retrieving messages from Redis server
-val, err := srv.RedisClient.Get(inID + "msg").Result()
-if err == nil && val != "" {
-    // Function to send old messaged to the user
-    go srv.SendOldMsg(inID, val)
-}</div>
-
-        <div class="code-block">func (srv *Server) SendOldMsg(key string, uMsgs string) {
-    fmt.Println("Sending old messages")
-    // splitting old messages
-    messages := strings.Split(uMsgs, "|")
-    srv.mut.Lock()
-    for _, msg := range messages {
-        // sending un-received message to the user via websocket
-        if err := srv.userCons[key].WriteMessage(1, []byte(msg)); err != nil {
+    func reflectString(data interface{}) {
+        rv := reflect.ValueOf(data)
+        rt := rv.Type().Kind()
+        if rt != reflect.Interface && rt != reflect.Map && rt != reflect.String && rt != reflect.Struct && rt != reflect.Ptr {
             return
         }
-    }
-    srv.RedisClient.Set(key, "", 0)
-    srv.mut.Unlock()
-}</div>
-
-        <p>
-            Now once user received his messages we can start with chatting session we will be using 2 <code>go func()</code> for that one will receive messages from websocket and broadcast it into <code>kafka</code> and the other will receive messages from Kafka and send it to recipient via websocket. In case the recipient is offline, the messages send by the user will be stored into redis.
-        </p>
-
-        <div class="code-block">// Receiver Server
-go func() {
-    for {
-        // Get messages from kafka which was broadcast by the server to which sender was connected to
-        msg, err := srv.reader.ReadMessage(srv.ctx)
-        if err != nil {
-            break
+        if rt == reflect.Map || rt == reflect.Ptr {
+            rv = reflect.Indirect(rv)
+            rt = rv.Type().Kind()
         }
-        fmt.Println("Kafka Message received: ", string(msg.Value))
-        
-        var usrMsg UserMessage
-        
-        err = json.Unmarshal(msg.Value, &usrMsg)
-        if err != nil {
-            break
+        if rt == reflect.String {
+            fmt.Println(rv)
+            return
         }
-        fmt.Println("Received:", usrMsg)
-        
-        // Retrieve connection object from map and send received messages to user via websocket
-        srv.mut.Lock()
-        // Checking if recipient is connected to the server
-        if conn, ok := srv.userCons[usrMsg.User]; ok {
-            // if recipient is connected sending messages via websocket
-            if err := conn.WriteMessage(1, []byte(usrMsg.Message)); err != nil {
-                break
+        if rt == reflect.Struct {
+            for i := 0; i < rv.NumField(); i++ {
+                fv := rv.Field(i)
+                ft := fv.Type().Kind()
+                switch ft {
+                case reflect.String:
+                    fmt.Println(fv)
+                case reflect.Map:
+                    processMap(fv.Interface())
+                case reflect.Struct:
+                    reflectString(fv.Interface())
+                }
             }
         }
-        srv.mut.Unlock()
     }
-}()</div>
 
-        <p>
-            Above code receives message from <code>kafka</code> and checks if recipient is connected to the server. If there exist a connection, server sends the message to recipient via websocket.
-        </p>
-    
-        <div class="code-block">// Sender Server
-for {
-    // Getting messages from websoket
-    _, body, err := conn.ReadMessage()
-    if err != nil {
-        break
-    }
-    // structure containing recipient user ID and messages
-    var usrMsg UserMessage
-    err = json.Unmarshal(body, &usrMsg)
-    if err != nil {
-        break
-    }
-    // checking if recipient is connected to any of the server instances via Redis
-    val, err = srv.RedisClient.Get(usrMsg.User).Result()
-    if err != nil || val == "false" {
-        // if recipient is not connected, saving messages to redis, so that recipient can receive them when he comes online
-        val, err := srv.RedisClient.Get(usrMsg.User + "msg").Result()
-        if err != nil {
-            val = usrMsg.Message
-        } else {
-            // if there are already old messages, appending new messages to them
-            val = val + "|" + usrMsg.Message
+    func processMap(data interface{}) {
+        fv := reflect.ValueOf(data)
+	    if fv.Kind() != reflect.Map {
+		    return
+	    }
+        for _, e := range fv.MapKeys() {
+            t := fv.MapIndex(e).Elem().Type().Kind()
+            v := fv.MapIndex(e).Elem()
+            switch t {
+                case reflect.String:
+                    fmt.Println(v)
+                default:
+                    reflectString(v.Interface())
+            }
         }
-        // writing un-recieved messages to redis for recipient to read when he comes online
-        srv.mut.Lock()
-        srv.RedisClient.Set(usrMsg.User+"msg", val, 0)
-        srv.mut.Unlock()
-        
-        log.Printf("Succes: Msg written in redis for user: %v and msg: %v", usrMsg.User, usrMsg.Message)
-    } else {
-        // In case recipient is online broadcasting message via kafka so that receiver server can get the message
-        tmp := string(body)
-        msg := kafka.Message{
-            Key:   []byte(usrMsg.User),
-            Value: []byte(tmp),
-        }
-        // writing message to kafka
-        err = srv.writer.WriteMessages(srv.ctx, msg)
-        if err != nil {
-            log.Printf("Error: %v", err)
-        }
-        log.Printf("Succes: Msg written in kafka for user: %v and msg: %v", usrMsg.User, string(msg.Value))
     }
-}</div>
+
+        </div>
 
         <p>
-            Above code receives <code>json encoded</code> messages from websocket and decode it into the structure. If the recipient is online, the server will broadcast the message into kafka so that the server instance to which recipient is connected will receive the message. In case recipient is offline, the messages will be stores in redis.    
-        </p>
- 
-        <div class="code-block">// return to handler in case user disconnect from server
-// setting map and redis, so that user appears offline
-srv.mut.Lock()
-delete(srv.userCons, inID)
-srv.RedisClient.Set(inID, "false", 0)
-srv.mut.Unlock()
-fmt.Println("User Deleted Redis")</div>
-
-        <p>
-            Once the connection is disconnected, we will remove the connection object from the map and mark user as offline in redis.
+            The Output of the above code is:
         </p>
 
-        <p>
-            It is worth to note that in the above code there are 2 channels for redis one store the user un-recieved messages and other to store user online status.
-        </p>
-
-        <p>
-            The code demonstrates how a multi-instance server chatting service will work and how messages will manage such a complex system.
-        </p>
-
-        <p>
-            Below is the <code>main()</code> func we used for the server:
-        </p>
-
-        <div class="code-block">func main() {
-    srv := InitService()
-    fmt.Println("Starting Server...")
-    router := chi.NewRouter()
-    router.Route("/", func(ws chi.Router) {
-        ws.Get("/", srv.Alive)
-        ws.Get("/read", srv.ReadMsg)
-    })
-    log.Fatal(http.ListenAndServe(":8081", router))
-}</div>
-
+        <div class="code-block">
+            /tmp/GoLand/___go_build_reflect_main_go
+            Hello
+            World
+            Reflection
+            
+            Process finished with the exit code 0         
+        </div>
 <p>
-    We can test this server by sending websocket request via postman. 
-    Below is the output snippets of postman:
-</p>
+    It's worth to be noted, the <code>NumField()</code> and <code>.Field()</code>are only applicable to structs. A panic will be caused if the element is not a struct. Also while dealing with reflect.Ptr we should be mindful of using reflect.Indirect() from which we ca retrieve the value the pointer is pointing to. 
 
-<img src="user1.png" alt="User 1 Chat Interface" class="diagram-image">
-<img src="user2.png" alt="User 2 Chat Interface" class="diagram-image">
+    Hence, we have to be very careful while implementing program using reflect package as it can easily trigger a <code>panic</code>.
+</p>
 
 <h2>Conclusion</h2>
 <p>
-    In this blog, we explored real-time chatting service, their system-design and how the messages are handled. Also we have implemented a multi-server instance chatting service which is managed by services like Redis and Kafka, due to which we are able to transmit messages reliably between users with very low latency.
+    In this blog, we have explored the concept of metaprogramming and reflection in programming languages. Also, we have discussed various use cases and implementation of reflection to get the better understanding of it.  Knowing the types of variables during run-time enables us to write a more flexible and faster code. Hence, reflection is  one of the most importance feature of metaprogramming paradigm.
 </p>
 
 <div class="blog-tags">
@@ -921,16 +778,16 @@ fmt.Println("User Deleted Redis")</div>
 
 <div class="blog-author">
     <a href="../index.html" class="logo">MJ</a>
-<div class="author-content">
-    <h3 class="author-name">Manubhav Jain</h3>
-    <p class="author-bio">Backend engineer specializing in distributed systems and real-time applications. Currently working on scalable messaging infrastructure and cloud-native applications.</p>
-    <div class="author-social">
-        <a href="https://github.com/mannu2411"><i class="fab fa-github"></i></a>
-        <a href="https://leetcode.com/u/mannu2411/" title="LeetCode"><i class="fas fa-code"></i></a>
-        <a href="https://www.linkedin.com/in/manubhav-jain-55382a154/"><i class="fab fa-linkedin"></i></a>
-        <a href="#"><i class="fas fa-globe"></i></a>
+    <div class="author-content">
+        <h3 class="author-name">Manubhav Jain</h3>
+        <p class="author-bio">Backend engineer specializing in distributed systems and real-time applications. Currently working on scalable messaging infrastructure and cloud-native applications.</p>
+        <div class="author-social">
+            <a href="https://github.com/mannu2411"><i class="fab fa-github"></i></a>
+            <a href="https://leetcode.com/u/mannu2411/" title="LeetCode"><i class="fas fa-code"></i></a>
+            <a href="https://www.linkedin.com/in/manubhav-jain-55382a154/"><i class="fab fa-linkedin"></i></a>
+            <a href="#"><i class="fas fa-globe"></i></a>
+        </div>
     </div>
-</div>
 </div>
 
 <div class="related-posts">
