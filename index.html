@@ -1191,7 +1191,12 @@
       try {
         const response = await fetch(scriptURL, {
           method: 'POST',
-          body: formData
+          body: formData,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST",
+            "Access-Control-Allow-Headers": "Content-Type",
+            },
         });
 
         const result = await response.json();
