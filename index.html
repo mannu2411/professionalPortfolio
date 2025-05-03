@@ -1160,20 +1160,53 @@
             
             <form class="contact-form" id="contact-form">
                 <div class="form-group">
-                    <input type="text" id="name" name="name" placeholder="Your Name" required>
+                  <input type="text" id="name" name="name" placeholder="Your Name" required>
                 </div>
                 <div class="form-group">
-                    <input type="email" id="email" name="email" placeholder="Your Email" required>
+                  <input type="email" id="email" name="email" placeholder="Your Email" required>
                 </div>
                 <div class="form-group">
-                    <input type="text" id="subject" name="subject" placeholder="Subject">
+                  <input type="text" id="subject" name="subject" placeholder="Subject">
                 </div>
                 <div class="form-group">
-                    <textarea id="message" name="message" placeholder="Your Message" required></textarea>
+                  <textarea id="message" name="message" placeholder="Your Message" required></textarea>
                 </div>
                 <button type="submit" class="button contact-button">Send Message</button>
+              </form>
+              
+              <p id="responseMessage" style="margin-top: 10px;"></p>
+
             </form>
-            
+          <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxbLPMf1fkptOn1Y-ca9k403s4-VfBFpZ7_1UwAY22YCxuS5G5FTJ6aBsJZdWb2NYANCw/exec";
+    const form = document.getElementById('contact-form');
+    const responseMessage = document.getElementById('responseMessage');
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        responseMessage.innerText = result.status === "success"
+          ? "Message sent successfully!"
+          : "Error: " + result.message;
+
+        form.reset();
+      } catch (error) {
+        responseMessage.innerText = "Network error!";
+      }
+    });
+  });
+</script>
+
             <div class="contact-alternatives">
                 <div class="contact-option">
                     <a href="mailto:manujain.2k12@gmail.com" target="_blank">
