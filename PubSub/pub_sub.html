@@ -324,6 +324,19 @@
         .related-posts {
             margin: 60px 0;
         }
+        .read-more {
+            display: inline-flex;
+            align-items: center;
+            color: var(--secondary-color);
+            font-size: 14px;
+            transition: gap 0.3s;
+            gap: 5px;
+            text-decoration: none;
+        }
+        
+        .read-more:hover {
+            gap: 10px;
+        }
         
         .related-title {
             font-size: 22px;
@@ -812,32 +825,42 @@ It is possible to integrate with the variety of consumers using Kafka. The best 
     <div class="related-grid">
         <div class="related-card">
             <div class="related-image">
-                <img src="/api/placeholder/400/300" alt="Microservices with Docker">
+                <img src="../Dashboard/dynamic-dashboard.svg" alt="Dynamic dashboard architecture diagram">
             </div>
             <div class="related-content">
-                <h3 class="related-card-title">Building Microservices with Docker and Kubernetes</h3>
+                <h3 class="related-card-title">Real time Dashboard using websockets</h3>
                 <p class="related-date">March 15, 2025</p>
+                <a href="../Dashboard/dashboard.html" class="read-more">
+                    Read More <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
         <div class="related-card">
             <div class="related-image">
-                <img src="/api/placeholder/400/300" alt="Event Sourcing">
+                <img src="../Reflect/reflect-in-go.png" alt="Reflection in Golang">
             </div>
             <div class="related-content">
-                <h3 class="related-card-title">Event Sourcing Pattern in Distributed Systems</h3>
-                <p class="related-date">February 28, 2025</p>
+                <h3 class="related-card-title">Reflection in Golang</h3>
+                <p class="related-date">January 19, 2025</p>
+                <a href="../Reflect/reflect.html" class="read-more">
+                    Read More <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
         <div class="related-card">
-            <div class="related-image">
-                <img src="/api/placeholder/400/300" alt="GraphQL APIs">
+            <div class="related-image"> 
+                <img src="../Redis PubSub/redis-pub-sub.png" alt="Pub-Sub using Redis">
             </div>
             <div class="related-content">
-                <h3 class="related-card-title">Building Efficient GraphQL APIs with Go</h3>
-                <p class="related-date">April 10, 2025</p>
+                <h3 class="related-card-title">Pub-Sub using Redis</h3>
+                <p class="related-date">December 10, 2024</p>
+                <a href="../Redis PubSub/redis_pub_sub.html" class="read-more">
+                    Read More <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
+        </div>
 </div>
 
 <div class="back-to-portfolio">
