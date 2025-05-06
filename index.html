@@ -783,15 +783,285 @@
         object-fit: contain;
     }
 }
+
+.loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loader-content {
+            text-align: center;
+        }
+        
+        .loader-title {
+            color: var(--text-color);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.5s;
+        }
+        
+        .loader-subtitle {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.8s;
+        }
+        
+        .loader {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        .loader div {
+            position: absolute;
+            top: 33px;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        
+        .loader div:nth-child(1) {
+            left: 8px;
+            animation: loader1 0.6s infinite;
+        }
+        
+        .loader div:nth-child(2) {
+            left: 8px;
+            animation: loader2 0.6s infinite;
+        }
+        
+        .loader div:nth-child(3) {
+            left: 32px;
+            animation: loader2 0.6s infinite;
+        }
+        
+        .loader div:nth-child(4) {
+            left: 56px;
+            animation: loader3 0.6s infinite;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(100, 255, 218, 0.2);
+            margin: 20px auto 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 3px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 1s;
+        }
+        
+        .progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--secondary-color);
+            width: 0%;
+            animation: progressAnimation 2.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes loader1 {
+            0% {
+                transform: scale(0);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes loader2 {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(24px, 0);
+            }
+        }
+        
+        @keyframes loader3 {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(0);
+            }
+        }
+        
+        @keyframes progressAnimation {
+            0% {
+                width: 0%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            border-right: 0.15em solid var(--secondary-color);
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: 0.1em;
+            animation: 
+                typing 3.5s steps(30, end),
+                blink-caret 0.75s step-end infinite;
+            opacity: 0;
+            animation-delay: 1.2s;
+            animation-fill-mode: forwards;
+        }
+        
+        @keyframes typing {
+            from { 
+                width: 0;
+                opacity: 1;
+            }
+            to { 
+                width: 100%;
+                opacity: 1;
+            }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--secondary-color) }
+        }
+       
 </style>
 <script>
     function toggleNav() {
         document.querySelector('.nav-links').classList.toggle('active');
     }
+        // Loading screen functionality
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                // Fade out loader
+                const loader = document.querySelector('.loader-wrapper');
+                loader.style.opacity = '0';
+                
+                // Show page content
+                document.body.style.visibility = 'visible';
+                
+                // Remove loader after fade transition
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                    
+                    // Start particle animation
+                    initParticles();
+                }, 500);
+            }, 3000); // Total loading time: 3 seconds
+        });
+        
+        // Particle animation
+        function initParticles() {
+            const animatedBg = document.getElementById('animated-bg');
+            const numberOfParticles = 50;
+            
+            for (let i = 0; i < numberOfParticles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random size between 2px and 5px
+                const size = Math.random() * 3 + 2;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                particle.style.left = `${x}%`;
+                particle.style.top = `${y}%`;
+                
+                // Random opacity
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                
+                // Random animation duration between 15s and 30s
+                const duration = Math.random() * 15 + 15;
+                
+                // Create and apply animation
+                const keyframes = `
+                    @keyframes float-${i} {
+                        0% {
+                            transform: translate(0, 0) rotate(0deg);
+                        }
+                        50% {
+                            transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
+                        }
+                        100% {
+                            transform: translate(0, 0) rotate(0deg);
+                        }
+                    }
+                `;
+                
+                const styleElement = document.createElement('style');
+                styleElement.textContent = keyframes;
+                document.head.appendChild(styleElement);
+                
+                particle.style.animation = `float-${i} ${duration}s ease-in-out infinite`;
+                
+                animatedBg.appendChild(particle);
+            }
+        }
+
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+    <div class="loader-wrapper">
+        <div class="loader-content">
+            <h1 class="loader-title">Manubhav Jain</h1>
+            <p class="loader-subtitle" class="typewriter">Software Developer</p>
+            <div class="loader">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+        </div>
+    </div>
+
 <div class="animated-bg" id="animated-bg"></div>
     
     <header>
