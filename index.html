@@ -7,7 +7,7 @@
     <meta name="robots" content="index, follow">
     <meta name="author" content="Manubhav Jain">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manubhav Jain | Backend Developer</title>
+    <title>Manubhav Jain | Software Developer</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="style.css">
 <script src="main.js">   </script>
@@ -43,6 +43,7 @@
         <a href="#skills">Skills</a>
         <a href="#projects">Projects</a>
         <a href="#blog">Blog</a>
+        <a href="#research">Research</a>
         <a href="#contact">Contact</a>
     </div>
 </nav>
@@ -71,6 +72,7 @@
             </p>
         </div>
     </section>
+    <section id="experience">
         <div class="section-container">
             <h2 class="section-title">Where I've Worked</h2>
             
@@ -81,14 +83,15 @@
                 </div>
                 <p class="job-title">Software Developer Backend</p>
                 <ul class="responsibilities">
-                    <li style="list-style-type: none; margin-left: -30px; margin-bottom: 15px;">
+                    <li style="list-style-type: none; margin-left: -30px; margin-bottom: 15px;" class="experience-card">
                         <strong>Project: ConnectUp</strong>
                     </li>
                     <li>Developed 20+ APIs to handle 100,000+ users, leveraging Go's concurrency model and multi-threading to achieve 35% performance improvements.</li>
                     <li>Enhanced system performance through Redis caching, reducing query response times and efficiently handling high user loads.</li>
                     <li>Designed intuitive module-level interfaces and enabled real-time communication for 50,000+ daily chats using WebSockets and Kafka.</li>
                     <li>Designed and implemented high-throughput, low-latency APIs, making thoughtful tradeoffs between consistency and availability.</li>
-                    <li style="list-style-type: none; margin-left: -30px; margin-top: 20px; margin-bottom: 15px;">
+                    
+                    <li style="list-style-type: none; margin-left: -30px; margin-top: 20px; margin-bottom: 15px;" class="experience-card">
                         <strong>Project: Prudential Cambodia</strong>
                     </li>
                     <li>Integrated 4+ payment gateways, boosting insurance purchases by 20%, showcasing expertise in building robust and scalable web-based applications.</li>
@@ -96,13 +99,30 @@
                     <li>Automated real-time monitoring using Power Automate, reducing downtime by 30%.</li>
                     <li>Created an API for bulk issuance of multiple policies, enabling batch processing of policy data in a high-performance backend system.</li>
                     <li>Developed secure and scalable APIs to handle bill payments for multiple insurance policies using Golang.</li>
-                    <li style="list-style-type: none; margin-left: -30px; margin-top: 20px; margin-bottom: 15px;">
+                    
+                    <li style="list-style-type: none; margin-left: -30px; margin-top: 20px; margin-bottom: 15px;" class="experience-card">
                         <strong>Project: Dianapps (Transit Management Application)</strong>
                     </li>
                     <li>Integrated 40+ transit APIs, managing millions of daily records, and building abstractions and contracts with separation of concerns.</li>
                     <li>Standardized transit data, reducing processing time by 25%, and improving the accuracy of large-scale distributed systems.</li>
                     <li>Prototyped and tested new ideas for system optimization, showcasing the ability to learn and implement solutions on the go.</li>
                     <li>Wrote unit and integration tests to validate the robustness of APIs and improve testing coverage.</li>
+
+                    <li style="list-style-type: none; margin-left: -30px; margin-top: 20px; margin-bottom: 15px;" class="experience-card">
+                        <strong>Project: Bynar User Server</strong>
+                    </li>
+                    <li>Technologies Used: AWS Lambda, AWS Cognito, PostgreSQL (RDS), Golang</li>
+                    <li>Designed and implemented a serverless backend system for user registration and authentication using AWS Lambda and AWS Cognito.</li>
+                    <li>Managed user identities and roles securely with AWS Cognito for seamless signup, login, and password recovery workflows.</li>
+                    <li>Integrated PostgreSQL (RDS) for persistent storage of user data, ensuring high availability and low-latency performance.</li>
+                    <li>Utilized Golang to develop microservices for data validation, email verification, and role-based access control (RBAC).</li>
+                    <li>Enabled scalable and cost-effective user management by leveraging AWS serverless architecture.</li>
+
+                    <li style="list-style-type: none; margin-left: -30px; margin-top: 20px; margin-bottom: 15px;" class="experience-card">
+                        <strong>Project: Precium Hotel Management Server</strong>
+                    </li>
+                    <li>Technologies Used: Golang, PostgreSQL, Redis</li>
+                    <li>Developed APIs for room booking, customer profile management, and payment handling.</li>
                 </ul>
             </div>
             
@@ -430,6 +450,45 @@
             </div>
         </div>
     </section>
+
+    <!-- Research Section -->
+<!-- Research Section -->
+<section id="research" class="py-16 bg-slate-950 text-white">
+    <div class="section-container max-w-6xl mx-auto px-4">
+        <h2 class="section-title text-3xl font-bold text-center mb-12">Research & Publications</h2>
+
+        <div class="research-grid grid md:grid-cols-1 gap-8">
+            <div class="research-card bg-slate-800 p-6 rounded-lg shadow-lg">
+                <div class="research-header mb-4">
+                    <h3 class="research-title text-xl font-semibold text-cyan-400">
+                        Sorting by Reversals: A Faster Approach for Building Overlap Forest
+                    </h3>
+                </div>
+
+                <br/>
+                <p class="research-description text-slate-300 text-sm leading-relaxed mb-6">
+                    The problem of computing the reversal distance and determining a sequence of reversals to transform a genome in molecular biology is a powerful tool to derive relationships between genes.
+                    Given two signed permutations, we need to find the shortest sequence of reversals to transform one into another.
+                    The foremost polynomial-time algorithm to calculate the reversal distance used an overlap graph formed from the permutation to find connected components and then identified graph structures like hurdles.
+                    Previous researchers have used a Union-Find structure, an O(nα(n)) algorithm (α → inverse Ackermann function) to determine the connected components.
+                    A linear time algorithm for finding the connected components, which was a faster implementation of the existing works, was proposed later.
+                    This algorithm is applied to an unsigned extension of the signed permutation.
+                    In the first scan, cycles in a breakpoint graph were located.
+                    Then in a second scan, an overlap forest is formed which gave all the connected components of the permutation.
+                    In this paper, we optimize the existing algorithm to construct the overlap forest by reducing a scan of the unsigned permutation.
+                </p>
+                <br/>
+                <br/>
+
+                <div class="research-links">
+                    <a href="https://ieeexplore.ieee.org/document/8711775" target="_blank" class="button inline-block bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded transition">
+                        Read Paper
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
    <!-- Contact Section -->
    <section id="contact">
